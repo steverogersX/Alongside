@@ -48,6 +48,43 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* A paragraph landing on the board, and the tick that confirms it was
+     handed back. Both are consequences of one event, so they share a curve. */
+  --animate-land: land 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-check: check-draw 0.3s ease-out 0.12s both;
+  --animate-halo: halo-out 1.4s ease-out both;
+
+  @keyframes land {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes check-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes halo-out {
+    from {
+      opacity: 0.5;
+      transform: scale(0.4);
+    }
+    to {
+      opacity: 0;
+      transform: scale(1);
+    }
+  }
 }
 
 :root {
@@ -176,6 +213,10 @@
   *::before,
   *::after {
     transition-duration: 1ms !important;
+    /* Run once and land on the end state rather than cancelling outright —
+       `both` fill means an animation that never runs paints its `from`. */
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
 

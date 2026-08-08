@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { AuthGuard } from "@/components/auth-guard";
 import { Sidebar } from "@/components/home/sidebar";
+import { cn } from "@/lib/utils";
 
 export function Shell({
   children,
@@ -16,20 +17,19 @@ export function Shell({
   activeWorkspaceId?: string;
 }) {
   return (
-    <TooltipProvider>
-      <div className="flex h-svh gap-2.5 p-2.5">
-        <Sidebar
-          activeNav={activeNav}
-          activeWorkspaceId={activeWorkspaceId}
-        />
+    <AuthGuard>
+      <TooltipProvider>
+        <div className="flex h-svh gap-2.5 p-2.5">
+          <Sidebar activeNav={activeNav} activeWorkspaceId={activeWorkspaceId} />
 
-        <div className="flex min-w-0 flex-1 flex-col overflow-y-auto rounded-2xl border border-sidebar-border bg-sidebar shadow-sm">
-          {children}
+          <div className="flex min-w-0 flex-1 flex-col overflow-y-auto rounded-2xl border border-sidebar-border bg-sidebar shadow-sm">
+            {children}
+          </div>
+
+          {rail}
         </div>
-
-        {rail}
-      </div>
-    </TooltipProvider>
+      </TooltipProvider>
+    </AuthGuard>
   );
 }
 

@@ -5,14 +5,14 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { personAvatar } from "@/lib/avatars";
-import type { Person } from "@/lib/data";
+import type { Member } from "@/lib/types";
 
 export function MemberStack({
   members,
   max = 4,
   ringClass = "ring-card",
 }: {
-  members: Person[];
+  members: Member[];
   max?: number;
   ringClass?: string;
 }) {
@@ -21,36 +21,25 @@ export function MemberStack({
 
   return (
     <div className="flex items-center">
-      {shown.map((m) => (
-        <Tooltip key={m.id}>
+      {shown.map((member) => (
+        <Tooltip key={member.id}>
           <TooltipTrigger asChild>
             <span className="relative -mr-1.5 inline-flex">
-              {/* eslint-disable-next-line @next/next/no-img-element -- inlined data URI */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={personAvatar(m.id, m.kind, 48)}
-                alt={m.name}
+                src={personAvatar(member.avatarSeed, member.kind, 48)}
+                alt={member.displayName}
                 className={cn(
                   "size-6 ring-2 select-none",
                   ringClass,
-                  m.kind === "agent" ? "rounded-md" : "rounded-full"
+                  member.kind === "bot" ? "rounded-md" : "rounded-full"
                 )}
               />
-              {m.status !== "offline" && (
-                <span
-                  className={cn(
-                    "absolute -right-px -bottom-px size-2 rounded-full ring-2",
-                    ringClass,
-                    m.status === "active"
-                      ? "bg-online"
-                      : "bg-muted-foreground/40"
-                  )}
-                />
-              )}
             </span>
           </TooltipTrigger>
           <TooltipContent>
-            {m.name}
-            {m.model ? ` · ${m.model}` : ""}
+            {member.displayName}
+            {member.model ? ` · ${member.model}` : ""}
           </TooltipContent>
         </Tooltip>
       ))}

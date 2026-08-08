@@ -10,11 +10,12 @@ import type {
 } from "@/modules/runs/run.schema.ts";
 import { badRequest, notFound } from "@/shared/errors.ts";
 import { atLeast } from "@/shared/role.ts";
+import type { PaginationQuery } from "@/shared/validation.ts";
 
 export const runService = {
-  async list(user: User, documentId: string) {
+  async list(user: User, documentId: string, page: PaginationQuery) {
     await accessService.requireDocumentRole(user, documentId, "viewer");
-    return runRepository.listForDocument(documentId);
+    return runRepository.listForDocument(documentId, page.limit, page.offset);
   },
 
   async start(user: User, documentId: string, input: StartRunInput) {
