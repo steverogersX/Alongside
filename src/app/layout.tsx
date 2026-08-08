@@ -27,8 +27,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${inter.variable} ${plexMono.variable} h-full antialiased`}
     >
-      {/* Extensions (password managers, ColorZilla, Grammarly) inject attributes
-          onto <body> before hydration. Suppress that one-level-deep diff only. */}
       <body className="h-full overflow-hidden" suppressHydrationWarning>
         {children}
       </body>

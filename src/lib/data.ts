@@ -1,15 +1,9 @@
-/**
- * Placeholder content for the home page. Swap for real queries once the
- * workspace + presence services are wired up — the shapes below are what
- * the UI actually reads.
- */
 
 export type Person = {
   id: string;
   name: string;
   initials: string;
   kind: "human" | "agent";
-  /** Agents only: what model is driving this seat. */
   model?: string;
   status: "active" | "idle" | "offline";
 };
@@ -17,12 +11,9 @@ export type Person = {
 export type Workspace = {
   id: string;
   name: string;
-  icon: string;
   purpose: string;
   members: Person[];
-  /** Human-readable relative time; the server renders this, not the client. */
   updatedAt: string;
-  /** What is happening right now, if anything. */
   live?: { actor: string; doing: string };
   docs: number;
   unread: number;
@@ -64,7 +55,6 @@ export const WORKSPACES: Workspace[] = [
   {
     id: "ws_msa",
     name: "Enterprise MSA",
-    icon: "📄",
     purpose: "Renewal terms, redlines, and the counterparty thread.",
     members: [
       p("u_sam", "Sam Ortega", "SO"),
@@ -79,7 +69,6 @@ export const WORKSPACES: Workspace[] = [
   {
     id: "ws_q3",
     name: "Q3 Launch",
-    icon: "🚀",
     purpose: "Positioning, launch checklist, and the press brief.",
     members: [
       p("u_you", "Pavan", "PV"),
@@ -94,7 +83,6 @@ export const WORKSPACES: Workspace[] = [
   {
     id: "ws_research",
     name: "Market Research",
-    icon: "🧭",
     purpose: "Competitor teardowns and the weekly signal digest.",
     members: [
       p("u_ida", "Ida Novak", "IN", "idle"),
@@ -109,7 +97,6 @@ export const WORKSPACES: Workspace[] = [
   {
     id: "ws_platform",
     name: "Platform Eng",
-    icon: "⚙️",
     purpose: "Migration plan, incident notes, and on-call handoffs.",
     members: [
       p("u_rey", "Rey Alcantara", "RA"),
@@ -124,7 +111,6 @@ export const WORKSPACES: Workspace[] = [
   {
     id: "ws_design",
     name: "Design Review",
-    icon: "🎨",
     purpose: "Critique threads and the component inventory.",
     members: [
       p("u_noor", "Noor Haddad", "NH"),
@@ -138,7 +124,6 @@ export const WORKSPACES: Workspace[] = [
   {
     id: "ws_hiring",
     name: "Hiring Loop",
-    icon: "🗂️",
     purpose: "Scorecards, debriefs, and the offer tracker.",
     members: [
       p("u_ida", "Ida Novak", "IN", "offline"),

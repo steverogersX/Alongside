@@ -1,39 +1,42 @@
 import Link from "next/link";
 import {
-  Bell,
-  Bot,
+  BrainCircuit,
   ChevronsUpDown,
-  Home,
-  Layers,
+  House,
+  Inbox,
+  LayoutGrid,
   Plus,
   Search,
   Settings,
-  Users,
+  UsersRound,
 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { WorkspaceMark } from "@/components/home/workspace-mark";
 import { WORKSPACES, VIEWER } from "@/lib/data";
 
 const NAV = [
-  { label: "Home", href: "/", icon: Home, active: true },
-  { label: "All workspaces", href: "/workspaces", icon: Layers },
-  { label: "Agents", href: "/agents", icon: Bot },
-  { label: "People", href: "/people", icon: Users },
-  { label: "Inbox", href: "/inbox", icon: Bell, badge: 11 },
+  { label: "Home", href: "/", icon: House, active: true },
+  { label: "All workspaces", href: "/workspaces", icon: LayoutGrid },
+  { label: "Agents", href: "/agents", icon: BrainCircuit },
+  { label: "People", href: "/people", icon: UsersRound },
+  { label: "Inbox", href: "/inbox", icon: Inbox, badge: 11 },
 ];
 
 export function Sidebar() {
   return (
     <aside className="hidden w-60 shrink-0 flex-col overflow-hidden rounded-2xl border border-sidebar-border bg-sidebar shadow-sm md:flex">
-      {/* Org switcher */}
-      <button
-        type="button"
-        className="flex items-center gap-2 px-3 py-3 text-left transition-colors hover:bg-sidebar-accent"
+      <Button
+        variant="ghost"
+        className="h-auto justify-start gap-2 rounded-none px-3 py-3 font-normal"
       >
         <span className="grid size-6 shrink-0 place-items-center rounded-md bg-foreground text-[11px] font-semibold text-background">
           A
         </span>
-        <span className="min-w-0 flex-1">
+        <span className="min-w-0 flex-1 text-left">
           <span className="block truncate text-[13px] font-medium">
             Alongside
           </span>
@@ -42,84 +45,98 @@ export function Sidebar() {
           </span>
         </span>
         <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" />
-      </button>
+      </Button>
 
       <div className="px-2 pb-2">
-        <button
-          type="button"
-          className="flex w-full items-center gap-2 rounded-lg border border-sidebar-border bg-card px-2 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent"
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full justify-start gap-2 font-normal text-muted-foreground"
         >
-          <Search className="size-3.5" />
-          <span className="flex-1 text-left">Search</span>
-          <kbd className="rounded border border-border px-1 font-mono text-[10px]">
-            ⌘K
-          </kbd>
-        </button>
+          <Search />
+          Search
+        </Button>
       </div>
 
       <nav className="flex flex-col gap-0.5 px-2">
         {NAV.map((item) => (
-          <Link
+          <Button
             key={item.label}
-            href={item.href}
+            asChild
+            variant="ghost"
+            size="sm"
             className={cn(
-              "flex items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] transition-colors",
+              "justify-start gap-2 text-[13px]",
               item.active
                 ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
-                : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground"
+                : "font-normal text-muted-foreground"
             )}
           >
-            <item.icon className="size-4 shrink-0" />
-            <span className="flex-1 truncate">{item.label}</span>
-            {item.badge ? (
-              <span className="rounded-full bg-agent px-1.5 text-[10px] font-medium text-agent-foreground tabular-nums">
-                {item.badge}
-              </span>
-            ) : null}
-          </Link>
+            <Link href={item.href}>
+              <item.icon />
+              <span className="flex-1 truncate text-left">{item.label}</span>
+              {item.badge ? (
+                <Badge className="h-4 bg-agent px-1.5 text-[10px] text-agent-foreground tabular-nums">
+                  {item.badge}
+                </Badge>
+              ) : null}
+            </Link>
+          </Button>
         ))}
       </nav>
 
       <div className="mt-6 flex items-center justify-between px-4 pb-1">
         <span className="eyebrow">Workspaces</span>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon-xs"
           aria-label="New workspace"
-          className="text-muted-foreground transition-colors hover:text-foreground"
+          className="text-muted-foreground"
         >
-          <Plus className="size-3.5" />
-        </button>
+          <Plus />
+        </Button>
       </div>
 
       <div className="flex flex-col gap-0.5 overflow-y-auto px-2 pb-2">
         {WORKSPACES.map((ws) => (
-          <Link
+          <Button
             key={ws.id}
-            href={`/w/${ws.id}`}
-            className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-foreground"
+            asChild
+            variant="ghost"
+            size="sm"
+            className="justify-start gap-2 text-[13px] font-normal text-muted-foreground"
           >
-            <span className="w-4 shrink-0 text-center text-[13px]">
-              {ws.icon}
-            </span>
-            <span className="flex-1 truncate">{ws.name}</span>
-            {ws.live ? (
-              <span
-                className="animate-agent-pulse size-1.5 shrink-0 rounded-full bg-agent"
-                title={`${ws.live.actor} is working`}
+            <Link href={`/w/${ws.id}`}>
+              <WorkspaceMark
+                seed={ws.id}
+                size={18}
+                className="size-4.5 rounded-[5px]"
               />
-            ) : null}
-          </Link>
+              <span className="flex-1 truncate text-left">{ws.name}</span>
+              {ws.live ? (
+                <span
+                  className="animate-agent-pulse size-1.5 shrink-0 rounded-full bg-agent"
+                  title={`${ws.live.actor} is working`}
+                />
+              ) : null}
+            </Link>
+          </Button>
         ))}
       </div>
 
-      <div className="mt-auto border-t border-sidebar-border p-2">
-        <Link
-          href="/settings"
-          className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-foreground"
+      <div className="mt-auto p-2">
+        <Separator className="mb-2" />
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start gap-2 text-[13px] font-normal text-muted-foreground"
         >
-          <Settings className="size-4" />
-          Settings
-        </Link>
+          <Link href="/settings">
+            <Settings />
+            Settings
+          </Link>
+        </Button>
       </div>
     </aside>
   );
