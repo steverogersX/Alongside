@@ -1,4 +1,3 @@
-import { createHash, randomBytes } from "node:crypto";
 import type { Response } from "express";
 import { and, eq, gt, isNull } from "drizzle-orm";
 
@@ -6,21 +5,21 @@ import { isProd } from "@/config/env.ts";
 import { db } from "@/db/client.ts";
 import { sessions, users } from "@/db/schema/index.ts";
 import { SESSION_COOKIE, SESSION_DAYS } from "@/modules/auth/session.constants.ts";
-
-const hashToken = (token: string) =>
-  createHash("sha256").update(token).digest("hex");
+import { tokenService } from "@/modules/auth/token.service.ts";
 
 export const sessionService = {
   async issue(userId: string, res: Response, userAgent?: string) {
-    const token = randomBytes(32).toString("base64url");
     const expiresAt = new Date(Date.now() + SESSION_DAYS * 86_400_000);
 
-    await db.insert(sessions).values({
-      userId,
-      tokenHash: hashToken(token),
-      userAgent: userAgent ?? null,
-      expiresAt,
-    });
+    const [session] = await db
+      .insert(sessions)
+      .values({ userId, userAgent: userAgent ?? null, expiresAt })
+      .returning();
+
+    const token = await tokenService.sign(
+      { sub: userId, sid: session!.id },
+      expiresAt
+    );
 
     res.cookie(SESSION_COOKIE, token, {
       httpOnly: true,
@@ -29,16 +28,22 @@ export const sessionService = {
       expires: expiresAt,
       path: "/",
     });
+
+    return token;
   },
 
   async resolve(token: string) {
+    const claims = await tokenService.verify(token);
+    if (!claims) return null;
+
     const [row] = await db
       .select({ session: sessions, user: users })
       .from(sessions)
       .innerJoin(users, eq(users.id, sessions.userId))
       .where(
         and(
-          eq(sessions.tokenHash, hashToken(token)),
+          eq(sessions.id, claims.sid),
+          eq(sessions.userId, claims.sub),
           isNull(sessions.revokedAt),
           gt(sessions.expiresAt, new Date()),
           isNull(users.deletedAt)
@@ -50,10 +55,14 @@ export const sessionService = {
   },
 
   async revoke(token: string, res: Response) {
-    await db
-      .update(sessions)
-      .set({ revokedAt: new Date() })
-      .where(eq(sessions.tokenHash, hashToken(token)));
+    const claims = await tokenService.verify(token);
+
+    if (claims) {
+      await db
+        .update(sessions)
+        .set({ revokedAt: new Date() })
+        .where(eq(sessions.id, claims.sid));
+    }
 
     res.clearCookie(SESSION_COOKIE, { path: "/" });
   },
