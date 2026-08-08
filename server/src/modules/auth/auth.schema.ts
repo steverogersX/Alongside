@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   displayNameSchema,
   emailSchema,
+  loginPasswordSchema,
   passwordSchema,
 } from "@/shared/validation.ts";
 
@@ -15,7 +16,7 @@ export const signupSchema = z.object({
 
 export const loginSchema = z.object({
   email: emailSchema,
-  password: passwordSchema,
+  password: loginPasswordSchema,
 });
 
 export type SignupInput = z.infer<typeof signupSchema>;
