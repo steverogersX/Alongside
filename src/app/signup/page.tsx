@@ -4,15 +4,18 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "@tanstack/react-form";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { AuthShell } from "@/components/auth/auth-shell";
 import { FormField } from "@/components/auth/form-field";
 import { Button } from "@/components/ui/button";
 import { ApiRequestError } from "@/lib/api";
+import { keys } from "@/lib/queries";
 import { signup, signupSchema } from "@/lib/auth";
 
 export default function SignupPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -29,7 +32,8 @@ export default function SignupPage() {
       setFieldErrors({});
 
       try {
-        await signup(value);
+        const result = await signup(value);
+        queryClient.setQueryData(keys.session, result);
         router.push("/");
       } catch (error) {
         if (error instanceof ApiRequestError) {

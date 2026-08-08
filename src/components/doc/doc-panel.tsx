@@ -1,25 +1,14 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
+import { Check } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { DocChat } from "@/components/doc/doc-chat";
+import { useRuns } from "@/lib/queries";
 import { cn } from "@/lib/utils";
-import type { ChatMessage, Person } from "@/lib/data";
 
-export function DocPanel({
-  chat,
-  people,
-  agent,
-  docTitle,
-  activity,
-}: {
-  chat: ChatMessage[];
-  people: Person[];
-  agent?: Person;
-  docTitle: string;
-  activity: ReactNode;
-}) {
+export function DocPanel({ documentId }: { documentId: string }) {
   const [tab, setTab] = useState<"chat" | "activity">("chat");
 
   return (
@@ -44,14 +33,50 @@ export function DocPanel({
       </div>
 
       {tab === "chat" ? (
-        <DocChat
-          seed={chat}
-          people={people}
-          agent={agent}
-          docTitle={docTitle}
-        />
+        <DocChat documentId={documentId} />
       ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto p-4">{activity}</div>
+        <RunFeed documentId={documentId} />
+      )}
+    </div>
+  );
+}
+
+function RunFeed({ documentId }: { documentId: string }) {
+  const runs = useRuns(documentId);
+  const list = runs.data?.runs ?? [];
+
+  return (
+    <div className="min-h-0 flex-1 overflow-y-auto p-4">
+      <h2 className="eyebrow pb-3">Agent runs</h2>
+
+      {runs.isPending ? (
+        <p className="text-[12px] text-muted-foreground">Loading…</p>
+      ) : list.length === 0 ? (
+        <p className="text-[12px] text-muted-foreground">
+          No agent has been asked to do anything here yet.
+        </p>
+      ) : (
+        <ol className="flex flex-col gap-3">
+          {list.map((run) => (
+            <li key={run.id} className="flex gap-2.5">
+              <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center">
+                {run.status === "running" ? (
+                  <span className="animate-agent-pulse size-2 rounded-full bg-agent" />
+                ) : (
+                  <Check className="size-3 text-muted-foreground" />
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[12.5px] leading-snug">
+                  {run.prompt}
+                </span>
+                <span className="block text-[11.5px] text-muted-foreground">
+                  {run.status} · ran as {run.ceiling}
+                </span>
+              </span>
+            </li>
+          ))}
+        </ol>
       )}
     </div>
   );

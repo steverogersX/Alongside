@@ -36,6 +36,10 @@ export function humanAvatar(seed: string, size = 48) {
   );
 }
 
-export function personAvatar(seed: string, kind: "human" | "agent", size = 48) {
-  return kind === "agent" ? agentMascot(seed, size) : humanAvatar(seed, size);
+export function personAvatar(
+  seed: string,
+  kind: "human" | "bot" | "agent",
+  size = 48
+) {
+  return kind === "human" ? humanAvatar(seed, size) : agentMascot(seed, size);
 }
