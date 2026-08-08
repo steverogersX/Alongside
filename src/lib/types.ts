@@ -62,3 +62,19 @@ export type AgentRun = {
   createdAt: string;
   endedAt: string | null;
 };
+
+export type DocumentLink = {
+  id: string;
+  documentId: string;
+  role: "viewer" | "editor";
+  label: string | null;
+  expiresAt: string | null;
+  revokedAt: string | null;
+  createdBy: string;
+  createdAt: string;
+};
+
+export type LinkSession = {
+  documentId: string;
+  role: Role;
+};

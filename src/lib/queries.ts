@@ -11,7 +11,9 @@ import type { SessionUser } from "@/lib/auth";
 import type {
   AgentRun,
   ChatMessage,
+  DocumentLink,
   DocumentSummary,
+  LinkSession,
   Member,
   Role,
   Workspace,
@@ -26,6 +28,8 @@ export const keys = {
   document: (id: string) => ["document", id] as const,
   chat: (id: string) => ["chat", id] as const,
   runs: (id: string) => ["runs", id] as const,
+  links: (id: string) => ["links", id] as const,
+  linkSession: ["link-session"] as const,
 };
 
 export function useSession() {
@@ -55,7 +59,12 @@ export function useWorkspace(id: string) {
 export function useDocument(id: string) {
   return useQuery({
     queryKey: keys.document(id),
-    queryFn: () => api<{ document: DocumentSummary; role: Role }>(`/documents/${id}`),
+    queryFn: () =>
+      api<{
+        document: DocumentSummary;
+        role: Role;
+        via: "member" | "link";
+      }>(`/documents/${id}`),
     enabled: Boolean(id),
   });
 }
@@ -135,8 +144,11 @@ export function useSaveDocument(documentId: string) {
     onSuccess: (data) =>
       client.setQueryData(
         keys.document(documentId),
-        (previous: { document: DocumentSummary; role: Role } | undefined) =>
-          previous ? { ...previous, document: data.document } : previous
+        (
+          previous:
+            | { document: DocumentSummary; role: Role; via: "member" | "link" }
+            | undefined
+        ) => (previous ? { ...previous, document: data.document } : previous)
       ),
   });
 }
@@ -173,5 +185,53 @@ export function useLogout() {
   return useMutation({
     mutationFn: () => apiPost("/auth/logout", {}),
     onSuccess: () => client.clear(),
+  });
+}
+
+export function useLinkSession() {
+  return useQuery({
+    queryKey: keys.linkSession,
+    queryFn: () => api<LinkSession>("/links/session"),
+    retry: false,
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useDocumentLinks(documentId: string, enabled = true) {
+  return useQuery({
+    queryKey: keys.links(documentId),
+    queryFn: () => api<{ links: DocumentLink[] }>(`/documents/${documentId}/links`),
+    enabled: enabled && Boolean(documentId),
+  });
+}
+
+export function useCreateLink(documentId: string) {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: {
+      role: "viewer" | "editor";
+      label?: string;
+      expiresInDays?: number;
+    }) =>
+      apiPost<{ link: DocumentLink; token: string }>(
+        `/documents/${documentId}/links`,
+        input
+      ),
+    onSuccess: () =>
+      client.invalidateQueries({ queryKey: keys.links(documentId) }),
+  });
+}
+
+export function useRevokeLink(documentId: string) {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: (linkId: string) =>
+      api<{ link: DocumentLink }>(`/documents/${documentId}/links/${linkId}`, {
+        method: "DELETE",
+      }),
+    onSuccess: () =>
+      client.invalidateQueries({ queryKey: keys.links(documentId) }),
   });
 }
