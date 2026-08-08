@@ -3,19 +3,22 @@ import { Router } from "express";
 import { requireUser } from "@/middleware/auth.ts";
 import { chatController } from "@/modules/chat/chat.controller.ts";
 import { documentController } from "@/modules/documents/document.controller.ts";
+import { linkController } from "@/modules/links/link.controller.ts";
 import { runController } from "@/modules/runs/run.controller.ts";
 
 export const documentRoutes = Router();
-
-documentRoutes.use(requireUser);
 
 documentRoutes.get("/:id", documentController.get);
 documentRoutes.patch("/:id", documentController.update);
 documentRoutes.get("/:id/role", documentController.role);
 
-documentRoutes.get("/:id/chat", chatController.list);
-documentRoutes.post("/:id/chat", chatController.post);
+documentRoutes.get("/:id/chat", requireUser, chatController.list);
+documentRoutes.post("/:id/chat", requireUser, chatController.post);
 
-documentRoutes.get("/:id/runs", runController.list);
-documentRoutes.post("/:id/runs", runController.start);
-documentRoutes.post("/:id/runs/:runId/decide", runController.decide);
+documentRoutes.get("/:id/runs", requireUser, runController.list);
+documentRoutes.post("/:id/runs", requireUser, runController.start);
+documentRoutes.post("/:id/runs/:runId/decide", requireUser, runController.decide);
+
+documentRoutes.get("/:id/links", requireUser, linkController.list);
+documentRoutes.post("/:id/links", requireUser, linkController.create);
+documentRoutes.delete("/:id/links/:linkId", requireUser, linkController.revoke);

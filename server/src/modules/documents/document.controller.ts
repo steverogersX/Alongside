@@ -1,29 +1,37 @@
+import { accessService } from "@/modules/access/access.service.ts";
 import { documentService } from "@/modules/documents/document.service.ts";
 import { updateDocumentSchema } from "@/modules/documents/document.schema.ts";
 import { ok } from "@/shared/response.ts";
-import { route } from "@/shared/route.ts";
+import { publicRoute } from "@/shared/route.ts";
 import { idParams, noQuery } from "@/shared/validation.ts";
 
 export const documentController = {
-  get: route(
+  get: publicRoute(
     { params: idParams, query: noQuery },
-    async ({ params, user, res }) => {
-      ok(res, await documentService.get(user, params.id));
+    async ({ params, req, res }) => {
+      const access = await accessService.contextAccess(req, params.id);
+      ok(res, await documentService.get(params.id, access));
     }
   ),
 
-  update: route(
+  update: publicRoute(
     { params: idParams, body: updateDocumentSchema, query: noQuery },
-    async ({ params, body, user, res }) => {
-      const document = await documentService.update(user, params.id, body);
+    async ({ params, body, req, res }) => {
+      const access = await accessService.contextAccess(req, params.id);
+      const document = await documentService.update(
+        params.id,
+        access?.role ?? null,
+        body
+      );
       ok(res, { document });
     }
   ),
 
-  role: route(
+  role: publicRoute(
     { params: idParams, query: noQuery },
-    async ({ params, user, res }) => {
-      ok(res, { role: await documentService.role(user, params.id) });
+    async ({ params, req, res }) => {
+      const access = await accessService.contextAccess(req, params.id);
+      ok(res, { role: documentService.role(access?.role ?? null) });
     }
   ),
 };

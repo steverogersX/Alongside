@@ -1,3 +1,5 @@
+import type { Request } from "express";
+
 import type { Role, User } from "@/db/types.ts";
 import { accessRepository } from "@/modules/access/access.repository.ts";
 import { forbidden, notFound } from "@/shared/errors.ts";
@@ -24,6 +26,22 @@ export const accessService = {
         row.workspace.id
       )
     );
+  },
+
+  async contextAccess(
+    req: Request,
+    documentId: string
+  ): Promise<{ role: Role; via: "member" | "link" } | null> {
+    if (req.user) {
+      const role = await this.documentRole(req.user, documentId);
+      return role ? { role, via: "member" } : null;
+    }
+
+    if (req.link && req.link.documentId === documentId) {
+      return { role: req.link.role, via: "link" };
+    }
+
+    return null;
   },
 
   async requireWorkspaceRole(user: User, workspaceId: string, required: Role) {

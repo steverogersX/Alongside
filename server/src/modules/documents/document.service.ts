@@ -1,30 +1,33 @@
-import type { User } from "@/db/types.ts";
-import { accessService } from "@/modules/access/access.service.ts";
+import type { Role } from "@/db/types.ts";
 import { documentRepository } from "@/modules/documents/document.repository.ts";
 import type { UpdateDocumentInput } from "@/modules/documents/document.schema.ts";
-import { notFound } from "@/shared/errors.ts";
+import { forbidden, notFound } from "@/shared/errors.ts";
+import { atLeast } from "@/shared/role.ts";
+
+export type Access = { role: Role; via: "member" | "link" };
 
 export const documentService = {
-  async get(user: User, documentId: string) {
-    const role = await accessService.requireDocumentRole(
-      user,
-      documentId,
-      "viewer"
-    );
+  async get(documentId: string, access: Access | null) {
+    if (!access) throw notFound("Document not found");
 
     const document = await documentRepository.findById(documentId);
     if (!document) throw notFound("Document not found");
 
-    return { document, role };
+    return { document, role: access.role, via: access.via };
   },
 
-  async update(user: User, documentId: string, patch: UpdateDocumentInput) {
-    await accessService.requireDocumentRole(user, documentId, "editor");
+  async update(
+    documentId: string,
+    role: Role | null,
+    patch: UpdateDocumentInput
+  ) {
+    if (!role) throw notFound("Document not found");
+    if (!atLeast(role, "editor")) throw forbidden();
+
     return documentRepository.update(documentId, patch);
   },
 
-  async role(user: User, documentId: string) {
-    const role = await accessService.documentRole(user, documentId);
+  role(role: Role | null) {
     if (!role) throw notFound("Document not found");
     return role;
   },
