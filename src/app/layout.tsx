@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
-import { Inter, IBM_Plex_Mono } from "next/font/google";
+import { Inter, IBM_Plex_Mono, Newsreader } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
   variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
   subsets: ["latin"],
   display: "swap",
 });
@@ -25,10 +31,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${newsreader.variable} ${plexMono.variable} h-full antialiased`}
     >
-      {/* Extensions (password managers, ColorZilla, Grammarly) inject attributes
-          onto <body> before hydration. Suppress that one-level-deep diff only. */}
       <body className="h-full overflow-hidden" suppressHydrationWarning>
         {children}
       </body>

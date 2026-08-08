@@ -4,19 +4,17 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { personAvatar } from "@/lib/avatars";
 import type { Person } from "@/lib/data";
 
-/**
- * Humans get a circle, agents get a squircle with the accent ring. The shape
- * difference is deliberate: you should never have to read a name to know
- * whether a person or a model is holding the pen.
- */
 export function MemberStack({
   members,
   max = 4,
+  ringClass = "ring-card",
 }: {
   members: Person[];
   max?: number;
+  ringClass?: string;
 }) {
   const shown = members.slice(0, max);
   const overflow = members.length - shown.length;
@@ -26,21 +24,22 @@ export function MemberStack({
       {shown.map((m) => (
         <Tooltip key={m.id}>
           <TooltipTrigger asChild>
-            <span className="relative -mr-1.5 inline-flex last:mr-0">
-              <span
+            <span className="relative -mr-1.5 inline-flex">
+              {/* eslint-disable-next-line @next/next/no-img-element -- inlined data URI */}
+              <img
+                src={personAvatar(m.id, m.kind, 48)}
+                alt={m.name}
                 className={cn(
-                  "grid size-6 place-items-center text-[10px] leading-none font-medium ring-2 ring-card",
-                  m.kind === "agent"
-                    ? "rounded-md bg-agent-muted text-agent"
-                    : "rounded-full bg-secondary text-muted-foreground"
+                  "size-6 ring-2 select-none",
+                  ringClass,
+                  m.kind === "agent" ? "rounded-md" : "rounded-full"
                 )}
-              >
-                {m.initials}
-              </span>
+              />
               {m.status !== "offline" && (
                 <span
                   className={cn(
-                    "absolute -right-px -bottom-px size-2 rounded-full ring-2 ring-card",
+                    "absolute -right-px -bottom-px size-2 rounded-full ring-2",
+                    ringClass,
                     m.status === "active"
                       ? "bg-online"
                       : "bg-muted-foreground/40"
@@ -57,7 +56,12 @@ export function MemberStack({
       ))}
 
       {overflow > 0 && (
-        <span className="relative inline-flex size-6 items-center justify-center rounded-full bg-secondary text-[10px] leading-none font-medium text-muted-foreground ring-2 ring-card">
+        <span
+          className={cn(
+            "relative inline-flex size-6 items-center justify-center rounded-full bg-secondary text-[10px] leading-none font-medium text-muted-foreground ring-2",
+            ringClass
+          )}
+        >
           +{overflow}
         </span>
       )}

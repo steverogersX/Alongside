@@ -1,0 +1,49 @@
+import type { ReactNode } from "react";
+
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Sidebar } from "@/components/home/sidebar";
+
+export function Shell({
+  children,
+  rail,
+  activeNav,
+  activeWorkspaceId,
+}: {
+  children: ReactNode;
+  rail?: ReactNode;
+  activeNav?: string;
+  activeWorkspaceId?: string;
+}) {
+  return (
+    <TooltipProvider>
+      <div className="flex h-svh gap-2.5 p-2.5">
+        <Sidebar
+          activeNav={activeNav}
+          activeWorkspaceId={activeWorkspaceId}
+        />
+
+        <div className="flex min-w-0 flex-1 flex-col overflow-y-auto rounded-2xl border border-sidebar-border bg-sidebar shadow-sm">
+          {children}
+        </div>
+
+        {rail}
+      </div>
+    </TooltipProvider>
+  );
+}
+
+export function ShellHeader({ children }: { children: ReactNode }) {
+  return (
+    <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-3 bg-sidebar/90 px-4 backdrop-blur-md">
+      {children}
+    </header>
+  );
+}
+
+export function ShellRail({ children }: { children: ReactNode }) {
+  return (
+    <aside className="hidden w-72 shrink-0 flex-col overflow-y-auto rounded-2xl border border-sidebar-border bg-sidebar p-4 shadow-sm xl:flex">
+      {children}
+    </aside>
+  );
+}
