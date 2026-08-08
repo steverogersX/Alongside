@@ -4,13 +4,15 @@ import { db, type Tx } from "@/db/client.ts";
 import { chatMessages, users } from "@/db/schema/index.ts";
 
 export const chatRepository = {
-  async listForDocument(documentId: string) {
+  async listForDocument(documentId: string, limit: number, offset: number) {
     return db
       .select({ message: chatMessages, author: users })
       .from(chatMessages)
       .innerJoin(users, eq(users.id, chatMessages.authorId))
       .where(eq(chatMessages.documentId, documentId))
-      .orderBy(asc(chatMessages.createdAt));
+      .orderBy(asc(chatMessages.createdAt))
+      .limit(limit)
+      .offset(offset);
   },
 
   async create(

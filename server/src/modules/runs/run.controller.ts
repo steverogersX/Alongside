@@ -5,12 +5,17 @@ import type {
   DecideRunInput,
   StartRunInput,
 } from "@/modules/runs/run.schema.ts";
-import { body, currentUser, param } from "@/shared/request.ts";
+import { body, currentUser, param, query } from "@/shared/request.ts";
 import { accepted, ok } from "@/shared/response.ts";
+import type { PaginationQuery } from "@/shared/validation.ts";
 
 export const runController = {
   async list(req: Request, res: Response) {
-    const runs = await runService.list(currentUser(req), param(req, "id"));
+    const runs = await runService.list(
+      currentUser(req),
+      param(req, "id"),
+      query<PaginationQuery>(req)
+    );
     ok(res, { runs }, { count: runs.length });
   },
 

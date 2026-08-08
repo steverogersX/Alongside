@@ -3,12 +3,17 @@ import { accessService } from "@/modules/access/access.service.ts";
 import { toPublicUser } from "@/modules/auth/auth.mapper.ts";
 import { chatRepository } from "@/modules/chat/chat.repository.ts";
 import type { PostMessageInput } from "@/modules/chat/chat.schema.ts";
+import type { PaginationQuery } from "@/shared/validation.ts";
 
 export const chatService = {
-  async list(user: User, documentId: string) {
+  async list(user: User, documentId: string, page: PaginationQuery) {
     await accessService.requireDocumentRole(user, documentId, "viewer");
 
-    const rows = await chatRepository.listForDocument(documentId);
+    const rows = await chatRepository.listForDocument(
+      documentId,
+      page.limit,
+      page.offset
+    );
 
     return rows.map((row) => ({
       ...row.message,

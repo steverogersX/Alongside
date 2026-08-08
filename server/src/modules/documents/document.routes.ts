@@ -12,52 +12,56 @@ import {
   runParams,
   startRunSchema,
 } from "@/modules/runs/run.schema.ts";
-import { idParams } from "@/shared/validation.ts";
+import { idParams, noQuery, paginationQuery } from "@/shared/validation.ts";
 
 export const documentRoutes = Router();
 
 documentRoutes.use(requireUser);
 
-documentRoutes.get("/:id", validate({ params: idParams }), documentController.get);
+documentRoutes.get(
+  "/:id",
+  validate({ params: idParams, query: noQuery }),
+  documentController.get
+);
 
 documentRoutes.patch(
   "/:id",
-  validate({ params: idParams, body: updateDocumentSchema }),
+  validate({ params: idParams, body: updateDocumentSchema, query: noQuery }),
   documentController.update
 );
 
 documentRoutes.get(
   "/:id/role",
-  validate({ params: idParams }),
+  validate({ params: idParams, query: noQuery }),
   documentController.role
 );
 
 documentRoutes.get(
   "/:id/chat",
-  validate({ params: idParams }),
+  validate({ params: idParams, query: paginationQuery }),
   chatController.list
 );
 
 documentRoutes.post(
   "/:id/chat",
-  validate({ params: idParams, body: postMessageSchema }),
+  validate({ params: idParams, body: postMessageSchema, query: noQuery }),
   chatController.post
 );
 
 documentRoutes.get(
   "/:id/runs",
-  validate({ params: idParams }),
+  validate({ params: idParams, query: paginationQuery }),
   runController.list
 );
 
 documentRoutes.post(
   "/:id/runs",
-  validate({ params: idParams, body: startRunSchema }),
+  validate({ params: idParams, body: startRunSchema, query: noQuery }),
   runController.start
 );
 
 documentRoutes.post(
   "/:id/runs/:runId/decide",
-  validate({ params: runParams, body: decideRunSchema }),
+  validate({ params: runParams, body: decideRunSchema, query: noQuery }),
   runController.decide
 );

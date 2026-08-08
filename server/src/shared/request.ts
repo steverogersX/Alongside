@@ -19,3 +19,7 @@ export function param(req: Request, key: string): string {
 export function body<T>(req: Request): T {
   return req.body as T;
 }
+
+export function query<T>(req: Request): T {
+  return req.query as T;
+}

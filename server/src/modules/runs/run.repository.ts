@@ -5,13 +5,14 @@ import { agentRuns } from "@/db/schema/index.ts";
 import type { Role, RunStatus } from "@/db/types.ts";
 
 export const runRepository = {
-  async listForDocument(documentId: string, limit = 50) {
+  async listForDocument(documentId: string, limit: number, offset: number) {
     return db
       .select()
       .from(agentRuns)
       .where(eq(agentRuns.documentId, documentId))
       .orderBy(desc(agentRuns.createdAt))
-      .limit(limit);
+      .limit(limit)
+      .offset(offset);
   },
 
   async findForDocument(runId: string, documentId: string) {
