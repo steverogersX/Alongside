@@ -1,114 +1,130 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, FileText, Sparkles, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronRight, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { WorkspaceMark } from "@/components/home/workspace-mark";
 import { useCreateWorkspace } from "@/lib/queries";
 
-const SUGGESTIONS = ["Product launch", "Contracts", "Research", "Design review"];
-
-const POINTS = [
+const TEMPLATES = [
   {
-    icon: FileText,
-    title: "Documents that live together",
-    body: "Everything for one piece of work in one place, not scattered across tabs.",
+    seed: "template-contract",
+    name: "Contract review",
+    purpose: "Redlines, the counterparty thread, and what we conceded.",
   },
   {
-    icon: Users,
-    title: "People and agents in the same room",
-    body: "Invite teammates as readers or writers. Give an agent a seat the same way.",
+    seed: "template-launch",
+    name: "Launch plan",
+    purpose: "Positioning, the checklist, and every gate before ship day.",
   },
   {
-    icon: Sparkles,
-    title: "Every edit says who made it",
-    body: "Agents propose, you accept. Nothing lands without a name against it.",
+    seed: "template-research",
+    name: "Research",
+    purpose: "Teardowns, sources, and the weekly digest that comes out of them.",
+  },
+  {
+    seed: "template-oncall",
+    name: "Engineering",
+    purpose: "Runbooks, incident notes, and on-call handoffs.",
   },
 ];
 
 export function EmptyWorkspaces() {
+  const router = useRouter();
   const createWorkspace = useCreateWorkspace();
   const [name, setName] = useState("");
+  const [pending, setPending] = useState<string | null>(null);
+
+  function create(input: { name: string; purpose?: string }, key: string) {
+    setPending(key);
+    createWorkspace.mutate(input, {
+      onSuccess: (result) => router.push(`/w/${result.workspace.id}`),
+      onSettled: () => setPending(null),
+    });
+  }
 
   return (
-    <div className="flex flex-col items-center py-14 text-center">
-      <div className="flex items-end gap-1.5">
-        <span className="h-9 w-7 rotate-[-8deg] rounded-md border border-border bg-card shadow-xs" />
-        <span className="h-12 w-9 rounded-lg border border-border bg-card shadow-sm" />
-        <span className="h-9 w-7 rotate-[8deg] rounded-md border border-agent/25 bg-agent-muted/50" />
+    <section>
+      <div className="border-b border-border pb-2.5">
+        <h2 className="eyebrow">Get started</h2>
       </div>
 
-      <h2 className="mt-6 text-[18px] font-semibold tracking-tight">
-        Create your first workspace
-      </h2>
-      <p className="mt-1.5 max-w-sm text-[13px] leading-relaxed text-muted-foreground">
-        A workspace is a room for one piece of work — the documents, the people,
-        and the agents that help with it.
+      <p className="pt-4 pb-1 text-[13px] text-muted-foreground">
+        You have no workspaces yet. Pick a starting point, or name your own —
+        everything is editable afterwards.
       </p>
 
-      <form
-        className="mt-6 flex w-full max-w-sm items-center gap-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (!name.trim()) return;
-          createWorkspace.mutate(
-            { name: name.trim() },
-            { onSuccess: () => setName("") }
-          );
-        }}
-      >
-        <Input
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder="Name your workspace"
-          aria-label="Workspace name"
-          autoFocus
-          className="h-9"
-        />
-        <Button
-          type="submit"
-          size="lg"
-          disabled={!name.trim() || createWorkspace.isPending}
-        >
-          {createWorkspace.isPending ? "Creating…" : "Create"}
-          <ArrowRight />
-        </Button>
-      </form>
-
-      <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
-        <span className="text-[11.5px] text-muted-foreground">Try</span>
-        {SUGGESTIONS.map((suggestion) => (
-          <Button
-            key={suggestion}
+      <div className="divide-y divide-border/60">
+        {TEMPLATES.map((template) => (
+          <button
+            key={template.name}
             type="button"
-            variant="outline"
-            size="xs"
-            onClick={() => setName(suggestion)}
-            className="font-normal text-muted-foreground"
+            disabled={pending !== null}
+            onClick={() =>
+              create(
+                { name: template.name, purpose: template.purpose },
+                template.name
+              )
+            }
+            className="group flex w-full cursor-pointer items-center gap-3 rounded-lg px-2.5 py-3 text-left transition-colors hover:bg-accent/60 disabled:opacity-60"
           >
-            {suggestion}
-          </Button>
+            <WorkspaceMark seed={template.seed} className="size-8" />
+
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[13.5px] font-medium">
+                {template.name}
+              </span>
+              <span className="block truncate text-[12px] text-muted-foreground">
+                {template.purpose}
+              </span>
+            </span>
+
+            <span className="shrink-0 text-[11.5px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
+              {pending === template.name ? "Creating…" : "Create"}
+            </span>
+            <ChevronRight className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+          </button>
         ))}
+
+        <form
+          className="flex items-center gap-3 px-2.5 py-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!name.trim()) return;
+            create({ name: name.trim() }, "blank");
+          }}
+        >
+          <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-dashed border-border text-muted-foreground">
+            <Plus className="size-3.5" />
+          </span>
+
+          <Input
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="Or name your own workspace"
+            aria-label="Workspace name"
+            className="h-8 max-w-xs"
+          />
+
+          <Button
+            type="submit"
+            size="sm"
+            variant="outline"
+            disabled={!name.trim() || pending !== null}
+          >
+            {pending === "blank" ? "Creating…" : "Create"}
+          </Button>
+        </form>
       </div>
 
       {createWorkspace.isError && (
-        <p role="alert" className="mt-3 text-[12px] text-destructive">
+        <p role="alert" className="pt-3 text-[12px] text-destructive">
           {createWorkspace.error.message}
         </p>
       )}
-
-      <dl className="mt-12 grid w-full max-w-2xl gap-6 text-left sm:grid-cols-3">
-        {POINTS.map((point) => (
-          <div key={point.title}>
-            <point.icon className="size-4 text-muted-foreground" />
-            <dt className="mt-2 text-[12.5px] font-medium">{point.title}</dt>
-            <dd className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-              {point.body}
-            </dd>
-          </div>
-        ))}
-      </dl>
-    </div>
+    </section>
   );
 }
