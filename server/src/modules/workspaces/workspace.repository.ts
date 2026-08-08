@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 
 import { db, type Tx } from "@/db/client.ts";
 import { documents, grants, users, workspaces } from "@/db/schema/index.ts";
@@ -107,6 +107,7 @@ export const workspaceRepository = {
       .values(input)
       .onConflictDoUpdate({
         target: [grants.userId, grants.workspaceId],
+        targetWhere: sql`${grants.workspaceId} is not null`,
         set: { role: input.role, grantedBy: input.grantedBy },
       })
       .returning();
