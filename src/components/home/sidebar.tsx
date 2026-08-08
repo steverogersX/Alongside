@@ -19,14 +19,20 @@ import { WorkspaceMark } from "@/components/home/workspace-mark";
 import { WORKSPACES, VIEWER } from "@/lib/data";
 
 const NAV = [
-  { label: "Home", href: "/", icon: House, active: true },
+  { label: "Home", href: "/", icon: House },
   { label: "All workspaces", href: "/workspaces", icon: LayoutGrid },
   { label: "Agents", href: "/agents", icon: BrainCircuit },
   { label: "People", href: "/people", icon: UsersRound },
   { label: "Inbox", href: "/inbox", icon: Inbox, badge: 11 },
 ];
 
-export function Sidebar() {
+export function Sidebar({
+  activeNav = "Home",
+  activeWorkspaceId,
+}: {
+  activeNav?: string;
+  activeWorkspaceId?: string;
+}) {
   return (
     <aside className="hidden w-60 shrink-0 flex-col overflow-hidden rounded-2xl border border-sidebar-border bg-sidebar shadow-sm md:flex">
       <Button
@@ -67,7 +73,7 @@ export function Sidebar() {
             size="sm"
             className={cn(
               "justify-start gap-2 text-[13px]",
-              item.active
+              item.label === activeNav
                 ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
                 : "font-normal text-muted-foreground"
             )}
@@ -104,7 +110,12 @@ export function Sidebar() {
             asChild
             variant="ghost"
             size="sm"
-            className="justify-start gap-2 text-[13px] font-normal text-muted-foreground"
+            className={cn(
+              "justify-start gap-2 text-[13px]",
+              ws.id === activeWorkspaceId
+                ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                : "font-normal text-muted-foreground"
+            )}
           >
             <Link href={`/w/${ws.id}`}>
               <WorkspaceMark
