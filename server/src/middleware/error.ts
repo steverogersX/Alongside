@@ -1,6 +1,6 @@
+import { randomUUID } from "node:crypto";
 import type { NextFunction, Request, Response } from "express";
 
-import { isProd } from "@/config/env.ts";
 import { AppError } from "@/shared/errors.ts";
 import { fail } from "@/shared/response.ts";
 
@@ -10,7 +10,7 @@ export function notFoundHandler(_req: Request, res: Response) {
 
 export function errorHandler(
   error: unknown,
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction
 ) {
@@ -23,14 +23,13 @@ export function errorHandler(
     return;
   }
 
-  console.error(error);
+  const errorId = randomUUID();
+
+  console.error(`[${errorId}] ${req.method} ${req.originalUrl}`, error);
 
   fail(res, 500, {
     code: "internal_error",
-    message: isProd
-      ? "Something went wrong"
-      : error instanceof Error
-        ? error.message
-        : String(error),
+    message: "Something went wrong on our end",
+    details: { errorId },
   });
 }
