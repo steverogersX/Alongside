@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import {
-  BrainCircuit,
   ChevronsUpDown,
   House,
   Inbox,
@@ -18,13 +17,14 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { CreateWorkspaceDialog } from "@/components/home/create-workspace-dialog";
 import { WorkspaceMark } from "@/components/home/workspace-mark";
 import { useLogout, useSession, useWorkspaces } from "@/lib/queries";
 
 const NAV = [
   { label: "Home", href: "/", icon: House },
   { label: "All workspaces", href: "/workspaces", icon: LayoutGrid },
-  { label: "Agents", href: "/agents", icon: BrainCircuit },
   { label: "People", href: "/people", icon: UsersRound },
   { label: "Inbox", href: "/inbox", icon: Inbox },
 ];
@@ -96,14 +96,18 @@ export function Sidebar({
 
       <div className="mt-6 flex items-center justify-between px-4 pb-1">
         <span className="eyebrow">Workspaces</span>
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          aria-label="New workspace"
-          className="text-muted-foreground"
-        >
-          <Plus />
-        </Button>
+        <CreateWorkspaceDialog
+          trigger={
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              aria-label="New workspace"
+              className="text-muted-foreground"
+            >
+              <Plus />
+            </Button>
+          }
+        />
       </div>
 
       <div className="flex flex-col gap-0.5 overflow-y-auto px-2 pb-2">
@@ -139,6 +143,9 @@ export function Sidebar({
 
       <div className="mt-auto p-2">
         <Separator className="mb-2" />
+        <div className="px-1 pb-1.5">
+          <ThemeToggle />
+        </div>
         <Button
           asChild
           variant="ghost"

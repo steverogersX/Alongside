@@ -1,22 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import { Plus, UserPlus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Shell, ShellHeader } from "@/components/shell";
 import { Clock } from "@/components/home/clock";
+import { CreateWorkspaceDialog } from "@/components/home/create-workspace-dialog";
 import { EmptyWorkspaces } from "@/components/home/empty-workspaces";
 import { WorkspaceRow } from "@/components/home/workspace-row";
-import { useCreateWorkspace, useSession, useWorkspaces } from "@/lib/queries";
+import { useSession, useWorkspaces } from "@/lib/queries";
 
 export default function Page() {
   const session = useSession();
   const workspaces = useWorkspaces();
-  const createWorkspace = useCreateWorkspace();
-  const [name, setName] = useState("");
-  const [creating, setCreating] = useState(false);
 
   const list = workspaces.data?.workspaces ?? [];
   const isEmpty = !workspaces.isPending && list.length === 0;
@@ -30,10 +26,14 @@ export default function Page() {
             <UserPlus />
             Invite
           </Button>
-          <Button size="sm" onClick={() => setCreating((open) => !open)}>
-            <Plus />
-            New workspace
-          </Button>
+          <CreateWorkspaceDialog
+            trigger={
+              <Button size="sm">
+                <Plus />
+                New workspace
+              </Button>
+            }
+          />
         </div>
       </ShellHeader>
 
@@ -46,7 +46,7 @@ export default function Page() {
             <Clock />
           </div>
 
-          {isEmpty && !creating ? (
+          {isEmpty ? (
             <EmptyWorkspaces />
           ) : (
             <section>
@@ -56,41 +56,6 @@ export default function Page() {
                   {list.length}
                 </span>
               </div>
-
-              {creating && (
-                <form
-                  className="flex items-center gap-2 py-3"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    if (!name.trim()) return;
-                    createWorkspace.mutate(
-                      { name: name.trim() },
-                      {
-                        onSuccess: () => {
-                          setName("");
-                          setCreating(false);
-                        },
-                      }
-                    );
-                  }}
-                >
-                  <Input
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    placeholder="Workspace name"
-                    aria-label="Workspace name"
-                    autoFocus
-                    className="h-8 max-w-xs"
-                  />
-                  <Button
-                    type="submit"
-                    size="sm"
-                    disabled={createWorkspace.isPending}
-                  >
-                    {createWorkspace.isPending ? "Creating…" : "Create"}
-                  </Button>
-                </form>
-              )}
 
               {workspaces.isPending ? (
                 <p className="py-6 text-[13px] text-muted-foreground">
