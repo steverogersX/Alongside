@@ -8,6 +8,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter);
+  --font-serif: var(--font-newsreader);
   --font-mono: var(--font-plex-mono);
   --font-heading: var(--font-inter);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -176,4 +177,86 @@
   *::after {
     transition-duration: 1ms !important;
   }
+}
+
+.doc-prose {
+  font-family: var(--font-newsreader), ui-serif, Georgia, serif;
+  font-size: 15.5px;
+  line-height: 1.75;
+  color: var(--foreground);
+}
+
+.doc-prose > * + * {
+  margin-top: 0.85em;
+}
+
+.doc-prose h2 {
+  font-size: 17px;
+  font-weight: 600;
+  margin-top: 1.6em;
+}
+
+.doc-prose p[data-claim] {
+  position: relative;
+  margin-inline: -0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-md);
+  background-color: color-mix(in oklch, var(--agent-muted) 55%, transparent);
+  transition: background-color 260ms ease;
+}
+
+.doc-prose p[data-claim]::before {
+  content: "";
+  position: absolute;
+  inset-block: 0.25rem;
+  left: -0.75rem;
+  width: 2px;
+  border-radius: 9999px;
+  background-color: var(--agent);
+}
+
+.doc-prose p[data-claim]::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background-color: var(--agent);
+  animation: agent-pulse 1.1s steps(1, end) infinite;
+}
+
+.doc-prose blockquote {
+  border-left: 2px solid var(--border);
+  padding-left: 0.9rem;
+  color: var(--muted-foreground);
+}
+
+.doc-prose ul,
+.doc-prose ol {
+  padding-left: 1.4rem;
+}
+
+.doc-prose ul {
+  list-style: disc;
+}
+
+.doc-prose ol {
+  list-style: decimal;
+}
+
+.doc-prose li + li {
+  margin-top: 0.25em;
+}
+
+.doc-prose code {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 0.86em;
+  background-color: var(--secondary);
+  padding: 0.1em 0.32em;
+  border-radius: var(--radius-sm);
+}
+
+.doc-prose ::selection {
+  background-color: color-mix(in oklch, var(--agent) 22%, transparent);
 }
