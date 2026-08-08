@@ -436,9 +436,18 @@ export type Comment = {
   resolved: boolean;
 };
 
+export type ChatMessage = {
+  id: string;
+  author: string;
+  body: string;
+  at: string;
+  quote?: string;
+};
+
 export type DocDetail = {
   blocks: Block[];
   steps: RunStep[];
   comments: Comment[];
+  chat?: ChatMessage[];
 };
 

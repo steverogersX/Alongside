@@ -102,6 +102,33 @@ export const DOC_DETAILS: Record<string, DocDetail> = {
         resolved: true,
       },
     ],
+    chat: [
+      {
+        id: "m1",
+        author: "u_sam",
+        body: "Claude, pull what we've settled at on liability caps the last two years.",
+        at: "18m",
+      },
+      {
+        id: "m2",
+        author: "a_claude",
+        body: "Six agreements. Four settled at 1.5x trailing fees, one at 1x, one at 2x — the 2x was the reseller deal where we carried no implementation risk.",
+        at: "17m",
+      },
+      {
+        id: "m3",
+        author: "u_noor",
+        body: "So 1.5x is the honest middle. Draft it, but leave the carve-outs alone.",
+        at: "6m",
+      },
+      {
+        id: "m4",
+        author: "a_claude",
+        body: "Drafting into the cap paragraph now. Carve-outs untouched — they're byte-identical to the 2024 text.",
+        at: "4m",
+        quote: "shall not exceed one hundred and fifty percent (150%)",
+      },
+    ],
   },
 
   d_cover: {
@@ -251,6 +278,26 @@ export const DOC_DETAILS: Record<string, DocDetail> = {
         resolved: false,
       },
     ],
+    chat: [
+      {
+        id: "m1",
+        author: "u_ida",
+        body: "Scout, score the three candidate lines against how the last two launches actually tested.",
+        at: "44m",
+      },
+      {
+        id: "m2",
+        author: "a_scout",
+        body: "Line two wins on both. The launches that tested best led with the behaviour being removed, not the capability being added.",
+        at: "42m",
+      },
+      {
+        id: "m3",
+        author: "u_you",
+        body: "That matches my read. Let's take line two into the enterprise test.",
+        at: "35m",
+      },
+    ],
   },
 
   d_check: {
@@ -357,6 +404,26 @@ export const DOC_DETAILS: Record<string, DocDetail> = {
         resolved: false,
       },
     ],
+    chat: [
+      {
+        id: "m1",
+        author: "u_ida",
+        body: "Atlas, how many of the nine do anything real about attribution?",
+        at: "26m",
+      },
+      {
+        id: "m2",
+        author: "a_atlas",
+        body: "Two. Both only at the document level — who edited, not which sentences came from the model. Nobody does it per-span.",
+        at: "25m",
+      },
+      {
+        id: "m3",
+        author: "u_ida",
+        body: "Then say that explicitly in the conclusion. It's the whole finding.",
+        at: "20m",
+      },
+    ],
   },
 
   d_digest: {
@@ -426,6 +493,26 @@ export const DOC_DETAILS: Record<string, DocDetail> = {
         anchor: "rollback",
         at: "3h",
         resolved: false,
+      },
+    ],
+    chat: [
+      {
+        id: "m1",
+        author: "u_rey",
+        body: "Patch, draft both rollback triggers so we can compare them side by side.",
+        at: "3h",
+      },
+      {
+        id: "m2",
+        author: "a_patch",
+        body: "Done. Error rate is cleaner to reason about but fires roughly four minutes later than P99 latency in the two incidents I checked.",
+        at: "3h",
+      },
+      {
+        id: "m3",
+        author: "u_tao",
+        body: "P99 will trip on the nightly batch though. Either exclude that window or go with error rate.",
+        at: "3h",
       },
     ],
   },
