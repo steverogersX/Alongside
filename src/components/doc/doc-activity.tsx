@@ -1,18 +1,17 @@
 import { Check } from "lucide-react";
 
 import { Separator } from "@/components/ui/separator";
-import { ShellRail } from "@/components/shell";
 import { cn } from "@/lib/utils";
 import { personAvatar } from "@/lib/avatars";
 import { type DocDetail } from "@/lib/data";
 import { findPerson } from "@/lib/docs";
 
-export function DocRail({ detail }: { detail: DocDetail }) {
+export function DocActivity({ detail }: { detail: DocDetail }) {
   const open = detail.comments.filter((c) => !c.resolved);
   const resolved = detail.comments.filter((c) => c.resolved);
 
   return (
-    <ShellRail>
+    <>
       <h2 className="eyebrow pb-3">Agent run</h2>
       <ol className="flex flex-col gap-3">
         {detail.steps.map((step) => (
@@ -85,6 +84,6 @@ export function DocRail({ detail }: { detail: DocDetail }) {
           );
         })}
       </ol>
-    </ShellRail>
+    </>
   );
 }

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { Sidebar } from "@/components/home/sidebar";
 
 export function Shell({
@@ -40,9 +41,20 @@ export function ShellHeader({ children }: { children: ReactNode }) {
   );
 }
 
-export function ShellRail({ children }: { children: ReactNode }) {
+export function ShellRail({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <aside className="hidden w-72 shrink-0 flex-col overflow-y-auto rounded-2xl border border-sidebar-border bg-sidebar p-4 shadow-sm xl:flex">
+    <aside
+      className={cn(
+        "hidden w-80 shrink-0 flex-col overflow-y-auto rounded-2xl border border-sidebar-border bg-sidebar p-4 shadow-sm xl:flex",
+        className
+      )}
+    >
       {children}
     </aside>
   );

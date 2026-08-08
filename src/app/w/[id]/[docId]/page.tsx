@@ -4,12 +4,19 @@ import { ChevronRight, MessageSquare, Share2, Star } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Shell, ShellHeader } from "@/components/shell";
+import { Shell, ShellHeader, ShellRail } from "@/components/shell";
 import { MemberStack } from "@/components/home/member-stack";
 import { DocEditor } from "@/components/doc/doc-editor";
-import { DocRail } from "@/components/doc/doc-rail";
+import { DocActivity } from "@/components/doc/doc-activity";
+import { DocPanel } from "@/components/doc/doc-panel";
 import { cn } from "@/lib/utils";
-import { WORKSPACES, DOCS, getWorkspace, type Person } from "@/lib/data";
+import {
+  WORKSPACES,
+  DOCS,
+  VIEWER,
+  getWorkspace,
+  type Person,
+} from "@/lib/data";
 import { getDoc, getDocDetail } from "@/lib/docs";
 
 const STATUS: Record<string, string> = {
@@ -40,7 +47,17 @@ export default async function Page({ params }: PageProps<"/w/[id]/[docId]">) {
     <Shell
       activeNav=""
       activeWorkspaceId={workspace.id}
-      rail={<DocRail detail={detail} />}
+      rail={
+        <ShellRail className="p-0">
+          <DocPanel
+            chat={detail.chat ?? []}
+            people={[VIEWER, ...workspace.members]}
+            agent={workspace.members.find((m) => m.kind === "agent")}
+            docTitle={doc.title}
+            activity={<DocActivity detail={detail} />}
+          />
+        </ShellRail>
+      }
     >
       <ShellHeader>
         <Link
