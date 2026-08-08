@@ -1,27 +1,29 @@
-import type { Request, Response } from "express";
-
 import { documentService } from "@/modules/documents/document.service.ts";
-import type { UpdateDocumentInput } from "@/modules/documents/document.schema.ts";
-import { body, currentUser, param } from "@/shared/request.ts";
+import { updateDocumentSchema } from "@/modules/documents/document.schema.ts";
 import { ok } from "@/shared/response.ts";
+import { route } from "@/shared/route.ts";
+import { idParams, noQuery } from "@/shared/validation.ts";
 
 export const documentController = {
-  async get(req: Request, res: Response) {
-    const result = await documentService.get(currentUser(req), param(req, "id"));
-    ok(res, result);
-  },
+  get: route(
+    { params: idParams, query: noQuery },
+    async ({ params, user, res }) => {
+      ok(res, await documentService.get(user, params.id));
+    }
+  ),
 
-  async update(req: Request, res: Response) {
-    const document = await documentService.update(
-      currentUser(req),
-      param(req, "id"),
-      body<UpdateDocumentInput>(req)
-    );
-    ok(res, { document });
-  },
+  update: route(
+    { params: idParams, body: updateDocumentSchema, query: noQuery },
+    async ({ params, body, user, res }) => {
+      const document = await documentService.update(user, params.id, body);
+      ok(res, { document });
+    }
+  ),
 
-  async role(req: Request, res: Response) {
-    const role = await documentService.role(currentUser(req), param(req, "id"));
-    ok(res, { role });
-  },
+  role: route(
+    { params: idParams, query: noQuery },
+    async ({ params, user, res }) => {
+      ok(res, { role: await documentService.role(user, params.id) });
+    }
+  ),
 };

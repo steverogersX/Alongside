@@ -1,40 +1,35 @@
-import type { Request, Response } from "express";
-
 import { runService } from "@/modules/runs/run.service.ts";
-import type {
-  DecideRunInput,
-  StartRunInput,
+import {
+  decideRunSchema,
+  runParams,
+  startRunSchema,
 } from "@/modules/runs/run.schema.ts";
-import { body, currentUser, param, query } from "@/shared/request.ts";
 import { accepted, ok } from "@/shared/response.ts";
-import type { PaginationQuery } from "@/shared/validation.ts";
+import { route } from "@/shared/route.ts";
+import { idParams, noQuery, paginationQuery } from "@/shared/validation.ts";
 
 export const runController = {
-  async list(req: Request, res: Response) {
-    const runs = await runService.list(
-      currentUser(req),
-      param(req, "id"),
-      query<PaginationQuery>(req)
-    );
-    ok(res, { runs }, { count: runs.length });
-  },
+  list: route(
+    { params: idParams, query: paginationQuery },
+    async ({ params, query, user, res }) => {
+      const runs = await runService.list(user, params.id, query);
+      ok(res, { runs }, { count: runs.length });
+    }
+  ),
 
-  async start(req: Request, res: Response) {
-    const run = await runService.start(
-      currentUser(req),
-      param(req, "id"),
-      body<StartRunInput>(req)
-    );
-    accepted(res, { run });
-  },
+  start: route(
+    { params: idParams, body: startRunSchema, query: noQuery },
+    async ({ params, body, user, res }) => {
+      const run = await runService.start(user, params.id, body);
+      accepted(res, { run });
+    }
+  ),
 
-  async decide(req: Request, res: Response) {
-    const run = await runService.decide(
-      currentUser(req),
-      param(req, "id"),
-      param(req, "runId"),
-      body<DecideRunInput>(req)
-    );
-    ok(res, { run });
-  },
+  decide: route(
+    { params: runParams, body: decideRunSchema, query: noQuery },
+    async ({ params, body, user, res }) => {
+      const run = await runService.decide(user, params.id, params.runId, body);
+      ok(res, { run });
+    }
+  ),
 };

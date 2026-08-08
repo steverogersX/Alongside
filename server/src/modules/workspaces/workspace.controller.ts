@@ -1,68 +1,68 @@
-import type { Request, Response } from "express";
-
 import { workspaceService } from "@/modules/workspaces/workspace.service.ts";
-import type {
-  AddMemberInput,
-  CreateDocumentInput,
-  CreateWorkspaceInput,
+import {
+  addMemberSchema,
+  createDocumentSchema,
+  createWorkspaceSchema,
+  memberParams,
 } from "@/modules/workspaces/workspace.schema.ts";
-import { body, currentUser, param } from "@/shared/request.ts";
 import { created, ok } from "@/shared/response.ts";
+import { route } from "@/shared/route.ts";
+import { idParams, noQuery } from "@/shared/validation.ts";
 
 export const workspaceController = {
-  async list(req: Request, res: Response) {
-    const workspaces = await workspaceService.list(currentUser(req));
+  list: route({ query: noQuery }, async ({ user, res }) => {
+    const workspaces = await workspaceService.list(user);
     ok(res, { workspaces }, { count: workspaces.length });
-  },
+  }),
 
-  async create(req: Request, res: Response) {
-    const workspace = await workspaceService.create(
-      currentUser(req),
-      body<CreateWorkspaceInput>(req)
-    );
-    created(res, { workspace });
-  },
+  create: route(
+    { body: createWorkspaceSchema, query: noQuery },
+    async ({ body, user, res }) => {
+      const workspace = await workspaceService.create(user, body);
+      created(res, { workspace });
+    }
+  ),
 
-  async detail(req: Request, res: Response) {
-    const detail = await workspaceService.detail(
-      currentUser(req),
-      param(req, "id")
-    );
-    ok(res, detail);
-  },
+  detail: route(
+    { params: idParams, query: noQuery },
+    async ({ params, user, res }) => {
+      ok(res, await workspaceService.detail(user, params.id));
+    }
+  ),
 
-  async agents(req: Request, res: Response) {
-    const agents = await workspaceService.agents(
-      currentUser(req),
-      param(req, "id")
-    );
-    ok(res, { agents }, { count: agents.length });
-  },
+  agents: route(
+    { params: idParams, query: noQuery },
+    async ({ params, user, res }) => {
+      const agents = await workspaceService.agents(user, params.id);
+      ok(res, { agents }, { count: agents.length });
+    }
+  ),
 
-  async addMember(req: Request, res: Response) {
-    const grant = await workspaceService.addMember(
-      currentUser(req),
-      param(req, "id"),
-      body<AddMemberInput>(req)
-    );
-    created(res, { grant });
-  },
+  addMember: route(
+    { params: idParams, body: addMemberSchema, query: noQuery },
+    async ({ params, body, user, res }) => {
+      const grant = await workspaceService.addMember(user, params.id, body);
+      created(res, { grant });
+    }
+  ),
 
-  async removeMember(req: Request, res: Response) {
-    await workspaceService.removeMember(
-      currentUser(req),
-      param(req, "id"),
-      param(req, "userId")
-    );
-    ok(res, { removed: true });
-  },
+  removeMember: route(
+    { params: memberParams, query: noQuery },
+    async ({ params, user, res }) => {
+      await workspaceService.removeMember(user, params.id, params.userId);
+      ok(res, { removed: true });
+    }
+  ),
 
-  async createDocument(req: Request, res: Response) {
-    const document = await workspaceService.createDocument(
-      currentUser(req),
-      param(req, "id"),
-      body<CreateDocumentInput>(req)
-    );
-    created(res, { document });
-  },
+  createDocument: route(
+    { params: idParams, body: createDocumentSchema, query: noQuery },
+    async ({ params, body, user, res }) => {
+      const document = await workspaceService.createDocument(
+        user,
+        params.id,
+        body
+      );
+      created(res, { document });
+    }
+  ),
 };
