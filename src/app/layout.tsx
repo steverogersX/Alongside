@@ -32,6 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${inter.variable} ${newsreader.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="h-full overflow-hidden" suppressHydrationWarning>

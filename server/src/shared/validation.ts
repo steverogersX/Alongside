@@ -3,6 +3,7 @@ import { z } from "zod";
 export const uuidSchema = z.string().uuid();
 export const emailSchema = z.string().trim().toLowerCase().email().max(254);
 export const passwordSchema = z.string().min(10).max(200);
+export const loginPasswordSchema = z.string().min(1).max(200);
 export const displayNameSchema = z.string().trim().min(1).max(80);
 export const roleSchema = z.enum(["viewer", "editor", "admin"]);
 

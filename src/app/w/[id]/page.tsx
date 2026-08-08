@@ -83,9 +83,6 @@ export default function WorkspacePage({
                     {detail.workspace.purpose ?? "No description yet"}
                   </p>
                 </div>
-                <Badge variant="outline" className="font-normal">
-                  you are {detail.role}
-                </Badge>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
@@ -96,7 +93,8 @@ export default function WorkspacePage({
                 />
                 <span className="text-[12px] text-muted-foreground">
                   {humans.length} {humans.length === 1 ? "person" : "people"} ·{" "}
-                  {agents.length} {agents.length === 1 ? "agent" : "agents"}
+                  {agents.length} {agents.length === 1 ? "agent" : "agents"} ·
+                  you can {detail.role === "viewer" ? "read" : "edit"}
                 </span>
               </div>
 

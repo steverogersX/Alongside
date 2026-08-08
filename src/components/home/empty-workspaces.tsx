@@ -4,8 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Plus } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { CreateWorkspaceDialog } from "@/components/home/create-workspace-dialog";
 import { WorkspaceMark } from "@/components/home/workspace-mark";
 import { useCreateWorkspace } from "@/lib/queries";
 
@@ -35,16 +34,7 @@ const TEMPLATES = [
 export function EmptyWorkspaces() {
   const router = useRouter();
   const createWorkspace = useCreateWorkspace();
-  const [name, setName] = useState("");
   const [pending, setPending] = useState<string | null>(null);
-
-  function create(input: { name: string; purpose?: string }, key: string) {
-    setPending(key);
-    createWorkspace.mutate(input, {
-      onSuccess: (result) => router.push(`/w/${result.workspace.id}`),
-      onSettled: () => setPending(null),
-    });
-  }
 
   return (
     <section>
@@ -53,7 +43,7 @@ export function EmptyWorkspaces() {
       </div>
 
       <p className="pt-4 pb-1 text-[13px] text-muted-foreground">
-        You have no workspaces yet. Pick a starting point, or name your own —
+        You have no workspaces yet. Pick a starting point, or create your own —
         everything is editable afterwards.
       </p>
 
@@ -63,12 +53,17 @@ export function EmptyWorkspaces() {
             key={template.name}
             type="button"
             disabled={pending !== null}
-            onClick={() =>
-              create(
+            onClick={() => {
+              setPending(template.name);
+              createWorkspace.mutate(
                 { name: template.name, purpose: template.purpose },
-                template.name
-              )
-            }
+                {
+                  onSuccess: (result) =>
+                    router.push(`/w/${result.workspace.id}`),
+                  onSettled: () => setPending(null),
+                }
+              );
+            }}
             className="group flex w-full cursor-pointer items-center gap-3 rounded-lg px-2.5 py-3 text-left transition-colors hover:bg-accent/60 disabled:opacity-60"
           >
             <WorkspaceMark seed={template.seed} className="size-8" />
@@ -89,35 +84,27 @@ export function EmptyWorkspaces() {
           </button>
         ))}
 
-        <form
-          className="flex items-center gap-3 px-2.5 py-3"
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (!name.trim()) return;
-            create({ name: name.trim() }, "blank");
-          }}
-        >
-          <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-dashed border-border text-muted-foreground">
-            <Plus className="size-3.5" />
-          </span>
-
-          <Input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder="Or name your own workspace"
-            aria-label="Workspace name"
-            className="h-8 max-w-xs"
-          />
-
-          <Button
-            type="submit"
-            size="sm"
-            variant="outline"
-            disabled={!name.trim() || pending !== null}
-          >
-            {pending === "blank" ? "Creating…" : "Create"}
-          </Button>
-        </form>
+        <CreateWorkspaceDialog
+          trigger={
+            <button
+              type="button"
+              className="group flex w-full cursor-pointer items-center gap-3 rounded-lg px-2.5 py-3 text-left transition-colors hover:bg-accent/60"
+            >
+              <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-dashed border-border text-muted-foreground">
+                <Plus className="size-3.5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[13.5px] font-medium">
+                  Start from scratch
+                </span>
+                <span className="block truncate text-[12px] text-muted-foreground">
+                  Name it yourself and add a purpose.
+                </span>
+              </span>
+              <ChevronRight className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+            </button>
+          }
+        />
       </div>
 
       {createWorkspace.isError && (
