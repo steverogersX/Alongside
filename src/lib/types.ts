@@ -1,0 +1,64 @@
+export type Role = "viewer" | "editor" | "admin";
+
+export type Member = {
+  id: string;
+  orgId: string;
+  kind: "human" | "bot";
+  displayName: string;
+  avatarSeed: string;
+  isOrgAdmin: boolean;
+  email: string | null;
+  model: string | null;
+};
+
+export type Workspace = {
+  id: string;
+  orgId: string;
+  name: string;
+  purpose: string | null;
+  createdBy: string;
+  createdAt: string;
+};
+
+export type DocumentSummary = {
+  id: string;
+  workspaceId: string;
+  title: string;
+  status: "draft" | "in_review" | "final";
+  content: unknown;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type WorkspaceDetail = {
+  workspace: Workspace;
+  role: Role;
+  members: { user: Member; role: Role }[];
+  documents: DocumentSummary[];
+};
+
+export type ChatMessage = {
+  id: string;
+  documentId: string;
+  authorId: string;
+  body: string;
+  runId: string | null;
+  createdAt: string;
+  author: Member;
+};
+
+export type AgentRun = {
+  id: string;
+  documentId: string;
+  agentId: string;
+  invokedBy: string;
+  prompt: string;
+  ceiling: Role;
+  status: "running" | "proposed" | "accepted" | "discarded" | "failed";
+  proposal: unknown;
+  summary: string | null;
+  decidedBy: string | null;
+  createdAt: string;
+  endedAt: string | null;
+};
