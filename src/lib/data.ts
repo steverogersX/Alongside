@@ -185,3 +185,260 @@ export const ACTIVITY: ActivityItem[] = [
     at: "5h",
   },
 ];
+
+export type Doc = {
+  id: string;
+  title: string;
+  excerpt: string;
+  status: "draft" | "in review" | "final";
+  editors: string[];
+  claim?: { actor: string; region: string };
+  comments: number;
+  updatedAt: string;
+};
+
+export const DOCS: Record<string, Doc[]> = {
+  ws_msa: [
+    {
+      id: "d_terms",
+      title: "MSA — renewal terms",
+      excerpt:
+        "Clause-by-clause redline against the 2024 agreement, with the counterparty's markup merged.",
+      status: "in review",
+      editors: ["u_sam", "a_claude", "u_noor"],
+      claim: { actor: "Claude", region: "§4.2 Limitation of Liability" },
+      comments: 14,
+      updatedAt: "2 min ago",
+    },
+    {
+      id: "d_cover",
+      title: "Renewal cover note",
+      excerpt:
+        "One page to legal summarising what moved and what we conceded on.",
+      status: "draft",
+      editors: ["u_sam"],
+      comments: 3,
+      updatedAt: "9 min ago",
+    },
+    {
+      id: "d_matrix",
+      title: "Concession matrix",
+      excerpt:
+        "Every ask from the counterparty, our position, and the walk-away line.",
+      status: "in review",
+      editors: ["u_noor", "a_claude"],
+      comments: 8,
+      updatedAt: "1 hour ago",
+    },
+    {
+      id: "d_sec",
+      title: "Security addendum",
+      excerpt: "Subprocessor list and the incident-notification window.",
+      status: "final",
+      editors: ["u_noor"],
+      comments: 0,
+      updatedAt: "3 days ago",
+    },
+  ],
+  ws_q3: [
+    {
+      id: "d_pos",
+      title: "Positioning brief",
+      excerpt: "Who it's for, what it replaces, and the one sentence we lead with.",
+      status: "in review",
+      editors: ["u_ida", "u_you"],
+      comments: 21,
+      updatedAt: "18 min ago",
+    },
+    {
+      id: "d_check",
+      title: "Launch checklist",
+      excerpt: "Every gate from code freeze to press embargo lift.",
+      status: "draft",
+      editors: ["u_rey", "a_scout"],
+      comments: 6,
+      updatedAt: "2 hours ago",
+    },
+    {
+      id: "d_press",
+      title: "Press brief",
+      excerpt: "Boilerplate, quotes, and the embargo terms.",
+      status: "draft",
+      editors: ["u_ida"],
+      comments: 2,
+      updatedAt: "yesterday",
+    },
+  ],
+  ws_research: [
+    {
+      id: "d_teardown",
+      title: "Competitor teardown — Q3",
+      excerpt: "Nine products, feature-by-feature, with pricing pulled from public pages.",
+      status: "final",
+      editors: ["a_atlas", "u_ida"],
+      claim: { actor: "Atlas", region: "Appendix B — sources" },
+      comments: 11,
+      updatedAt: "24 min ago",
+    },
+    {
+      id: "d_digest",
+      title: "Weekly signal digest",
+      excerpt: "What moved in the market, filtered to things that change our roadmap.",
+      status: "draft",
+      editors: ["a_digest"],
+      comments: 0,
+      updatedAt: "1 hour ago",
+    },
+  ],
+  ws_platform: [
+    {
+      id: "d_runbook",
+      title: "Migration runbook",
+      excerpt: "Cutover steps, rollback triggers, and who holds the pager at each stage.",
+      status: "in review",
+      editors: ["u_rey", "a_patch"],
+      comments: 19,
+      updatedAt: "3 hours ago",
+    },
+    {
+      id: "d_incident",
+      title: "Incident notes — 08/02",
+      excerpt: "Timeline, blast radius, and the three follow-ups that came out of it.",
+      status: "final",
+      editors: ["u_sam", "u_tao"],
+      comments: 5,
+      updatedAt: "yesterday",
+    },
+  ],
+  ws_design: [
+    {
+      id: "d_inventory",
+      title: "Component inventory",
+      excerpt: "Every component in the system, its owner, and whether it's been reviewed.",
+      status: "in review",
+      editors: ["u_noor", "a_critic"],
+      comments: 4,
+      updatedAt: "2 days ago",
+    },
+  ],
+  ws_hiring: [
+    {
+      id: "d_scorecard",
+      title: "Scorecard — platform eng",
+      excerpt: "The four signals we grade on and what strong looks like for each.",
+      status: "final",
+      editors: ["u_ida"],
+      comments: 1,
+      updatedAt: "4 days ago",
+    },
+    {
+      id: "d_offers",
+      title: "Offer tracker",
+      excerpt: "Every candidate in flight, stage, and the decision date.",
+      status: "draft",
+      editors: ["u_ida", "a_screen"],
+      comments: 0,
+      updatedAt: "5 days ago",
+    },
+  ],
+};
+
+export function getWorkspace(id: string) {
+  return WORKSPACES.find((ws) => ws.id === id);
+}
+
+export function getDocs(id: string) {
+  return DOCS[id] ?? [];
+}
+
+export type AgentDetail = {
+  scope: string;
+  permissions: string[];
+  runs: number;
+  lastRun: string;
+  accepted: number;
+};
+
+export const AGENT_DETAILS: Record<string, AgentDetail> = {
+  a_claude: {
+    scope: "Contract drafting and clause comparison",
+    permissions: ["Read docs", "Propose edits", "Comment"],
+    runs: 148,
+    lastRun: "2 min ago",
+    accepted: 91,
+  },
+  a_scout: {
+    scope: "Launch checklist upkeep and gate reminders",
+    permissions: ["Read docs", "Comment"],
+    runs: 62,
+    lastRun: "2 hours ago",
+    accepted: 84,
+  },
+  a_atlas: {
+    scope: "Competitor research from public sources",
+    permissions: ["Read docs", "Propose edits", "Fetch web"],
+    runs: 210,
+    lastRun: "24 min ago",
+    accepted: 88,
+  },
+  a_digest: {
+    scope: "Weekly market digest",
+    permissions: ["Read docs", "Fetch web"],
+    runs: 34,
+    lastRun: "1 hour ago",
+    accepted: 96,
+  },
+  a_patch: {
+    scope: "Runbook drafting and incident write-ups",
+    permissions: ["Read docs", "Propose edits"],
+    runs: 77,
+    lastRun: "3 hours ago",
+    accepted: 79,
+  },
+  a_critic: {
+    scope: "Design critique against the component inventory",
+    permissions: ["Read docs", "Comment"],
+    runs: 41,
+    lastRun: "2 days ago",
+    accepted: 73,
+  },
+  a_screen: {
+    scope: "Resume screening against the scorecard",
+    permissions: ["Read docs", "Comment"],
+    runs: 305,
+    lastRun: "4 days ago",
+    accepted: 68,
+  },
+};
+
+export type Block = {
+  id: string;
+  kind: "h2" | "p";
+  text: string;
+  claimedBy?: string;
+  attribution?: { actor: string; note: string };
+};
+
+export type RunStep = {
+  id: string;
+  actor: string;
+  label: string;
+  detail: string;
+  state: "done" | "running";
+};
+
+export type Comment = {
+  id: string;
+  author: string;
+  body: string;
+  anchor: string;
+  at: string;
+  resolved: boolean;
+};
+
+export type DocDetail = {
+  blocks: Block[];
+  steps: RunStep[];
+  comments: Comment[];
+};
+
