@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ChatEmpty } from "@/components/doc/chat-empty";
 import { ChatView, type ChatEntry } from "@/components/doc/chat-view";
 
 const minutesAgo = (minutes: number) =>
@@ -181,6 +182,47 @@ export default function ChatPreviewPage() {
               <span className="eyebrow">Chat · wide</span>
             </div>
             <ChatView messages={messages} onSend={send} onToggleReaction={toggleReaction} />
+          </div>
+        </div>
+
+        <div className="w-full max-w-5xl">
+          <p className="eyebrow">Empty states</p>
+
+          <div className="mt-3 flex flex-wrap gap-6">
+            {(
+              [
+                { label: "Can send", disabled: false },
+                { label: "Read only", disabled: true },
+              ] as const
+            ).map((state) => (
+              <div
+                key={state.label}
+                className="flex h-72 w-72 flex-col overflow-hidden rounded-2xl border border-sidebar-border bg-sidebar shadow-sm"
+              >
+                <div className="shrink-0 border-b border-border/70 px-4 py-2.5">
+                  <span className="eyebrow">{state.label}</span>
+                </div>
+                <ChatView
+                  messages={[]}
+                  disabled={state.disabled}
+                  onSend={() => {}}
+                  placeholder={
+                    state.disabled
+                      ? "You can read this thread"
+                      : "Message the room…"
+                  }
+                />
+              </div>
+            ))}
+
+            <div className="flex h-72 w-72 flex-col overflow-hidden rounded-2xl border border-sidebar-border bg-sidebar shadow-sm">
+              <div className="shrink-0 border-b border-border/70 px-4 py-2.5">
+                <span className="eyebrow">No access</span>
+              </div>
+              <div className="grid min-h-0 flex-1 place-items-center">
+                <ChatEmpty variant="none" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
