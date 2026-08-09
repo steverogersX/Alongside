@@ -25,16 +25,42 @@ export function retryAfterOf(response: Response) {
   return Number.isNaN(date) ? undefined : Math.max(0, date - Date.now());
 }
 
+const MAX_MESSAGE = 180;
+
+/**
+ * Providers return essays — Gemini's quota error is a dozen lines of metric
+ * names and links. Keep the first sentence; the rest is noise in a chat rail.
+ */
+function tidy(message: string) {
+  const first = message.split(/[\n*]|(?<=\.)\s(?=[A-Z])/)[0] ?? message;
+  const trimmed = first.replace(/\s+/g, " ").trim();
+
+  return trimmed.length > MAX_MESSAGE
+    ? `${trimmed.slice(0, MAX_MESSAGE - 1).trimEnd()}…`
+    : trimmed;
+}
+
 export async function providerError(response: Response) {
   const body = (await response.json().catch(() => null)) as {
-    error?: { message?: string };
+    error?: { message?: string; details?: { retryDelay?: string }[] };
     message?: string;
   } | null;
 
-  const message =
+  const message = tidy(
     body?.error?.message ??
-    body?.message ??
-    `Provider returned ${response.status}`;
+      body?.message ??
+      `Provider returned ${response.status}`
+  );
 
-  return new ProviderError(response.status, message, retryAfterOf(response));
+  // Gemini puts its wait in the body rather than a Retry-After header.
+  const detail = body?.error?.details?.find((row) => row.retryDelay);
+  const bodyDelay = detail?.retryDelay
+    ? Number.parseFloat(detail.retryDelay) * 1000
+    : undefined;
+
+  return new ProviderError(
+    response.status,
+    message,
+    retryAfterOf(response) ?? (Number.isFinite(bodyDelay) ? bodyDelay : undefined)
+  );
 }
