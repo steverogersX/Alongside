@@ -221,10 +221,17 @@
 }
 
 .doc-prose {
-  font-family: var(--font-newsreader), ui-serif, Georgia, serif;
-  font-size: 15.5px;
-  line-height: 1.75;
+  font-family: var(--doc-font, var(--font-source-serif)), ui-serif, Georgia,
+    serif;
+  font-size: 17px;
+  line-height: 1.7;
+  letter-spacing: -0.003em;
   color: var(--foreground);
+  font-feature-settings: "liga", "kern";
+}
+
+.doc-prose [style*="font-family"] {
+  letter-spacing: normal;
 }
 
 .doc-prose > * + * {
@@ -232,9 +239,10 @@
 }
 
 .doc-prose h2 {
-  font-size: 17px;
+  font-size: 1.2em;
   font-weight: 600;
-  margin-top: 1.6em;
+  letter-spacing: -0.01em;
+  margin-top: 1.7em;
 }
 
 .doc-prose p[data-claim] {
