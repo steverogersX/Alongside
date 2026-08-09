@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Shell, ShellHeader, ShellRail } from "@/components/shell";
 import { EmptyState } from "@/components/empty-state";
+import { AgentsDialog } from "@/components/workspace/agents-dialog";
 import { DocStatus } from "@/components/doc/doc-status";
 import { MemberStack } from "@/components/home/member-stack";
 import { WorkspaceMark } from "@/components/home/workspace-mark";
@@ -18,6 +19,7 @@ import {
   RowsSkeleton,
   WorkspaceHeaderSkeleton,
 } from "@/components/skeletons";
+import { AgentAvatar } from "@/components/workspace/agent-avatar";
 import { personAvatar } from "@/lib/avatars";
 import { useCreateDocument, useWorkspace } from "@/lib/queries";
 
@@ -52,6 +54,15 @@ export default function WorkspacePage({
         </span>
 
         <div className="ml-auto flex items-center gap-2">
+          <AgentsDialog
+            workspaceId={id}
+            trigger={
+              <Button variant="outline" size="sm">
+                <Bot />
+                Agents
+              </Button>
+            }
+          />
           <Button size="sm" onClick={() => setCreating((open) => !open)}>
             <Plus />
             New doc
@@ -221,7 +232,22 @@ function Rail({ id }: { id: string }) {
 
         <Separator className="my-4" />
 
-        <h2 className="eyebrow pb-3">Agents</h2>
+        <div className="flex items-center justify-between pb-3">
+        <h2 className="eyebrow">Agents</h2>
+        <AgentsDialog
+          workspaceId={id}
+          trigger={
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              aria-label="Add an agent"
+              className="text-muted-foreground"
+            >
+              <Plus />
+            </Button>
+          }
+        />
+      </div>
         <PeopleSkeleton rows={2} />
       </ShellRail>
     );
@@ -250,25 +276,49 @@ function Rail({ id }: { id: string }) {
 
       <Separator className="my-4" />
 
-      <h2 className="eyebrow pb-3">Agents</h2>
+      <div className="flex items-center justify-between pb-3">
+        <h2 className="eyebrow">Agents</h2>
+        <AgentsDialog
+          workspaceId={id}
+          trigger={
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              aria-label="Add an agent"
+              className="text-muted-foreground"
+            >
+              <Plus />
+            </Button>
+          }
+        />
+      </div>
       <div className="flex flex-col gap-2.5">
         {agents.length === 0 ? (
           <EmptyState
             size="sm"
             icon={Bot}
             title="No agents yet"
-            body="Connect an agent and it joins here with a seat and a role."
+            body="Add one with your own provider key and anyone here can bring it into a document with @."
             className="px-0"
+            action={
+              <AgentsDialog
+                workspaceId={id}
+                trigger={
+                  <Button variant="outline" size="xs">
+                    <Plus />
+                    Add an agent
+                  </Button>
+                }
+              />
+            }
           />
         ) : (
           agents.map((row) => (
             <div key={row.user.id} className="flex items-center gap-2.5">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={personAvatar(row.user.avatarSeed, "agent", 48)}
-                alt=""
-                aria-hidden
-                className="size-6 shrink-0 rounded-md ring-1 ring-agent/25 select-none"
+              <AgentAvatar
+                provider={row.user.provider}
+                seed={row.user.avatarSeed}
+                className="size-6"
               />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[12.5px] font-medium">

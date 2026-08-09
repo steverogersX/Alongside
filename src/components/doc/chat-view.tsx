@@ -1,17 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
 import { ChatSkeleton } from "@/components/skeletons";
+import { AgentRunCard, type RunView } from "@/components/doc/agent-run-card";
+import { ChatComposer } from "@/components/doc/chat-composer";
+import { splitMentions, type Mentionable } from "@/components/doc/mention-menu";
 import { ChatEmpty } from "@/components/doc/chat-empty";
 import {
   ReactionButton,
   ReactionChips,
   type ChatReaction,
 } from "@/components/doc/message-reactions";
+import { AgentAvatar } from "@/components/workspace/agent-avatar";
 import { personAvatar } from "@/lib/avatars";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ export type ChatAuthor = {
   avatarSeed: string;
   kind: "human" | "bot" | "guest";
   model?: string | null;
+  provider?: string | null;
 };
 
 export type ChatEntry = {
@@ -30,6 +32,7 @@ export type ChatEntry = {
   author: ChatAuthor;
   isYou?: boolean;
   reactions?: ChatReaction[];
+  run?: RunView;
 };
 
 const GROUP_WINDOW_MS = 5 * 60_000;
@@ -48,6 +51,9 @@ export function ChatView({
   placeholder = "Message the room…",
   onSend,
   onToggleReaction,
+  onStopRun,
+  stoppingRun = false,
+  mentionables = [],
 }: {
   messages: ChatEntry[];
   loading?: boolean;
@@ -56,10 +62,13 @@ export function ChatView({
   placeholder?: string;
   onSend: (body: string) => void;
   onToggleReaction?: (messageId: string, emoji: string) => void;
+  onStopRun?: (runId: string) => void;
+  stoppingRun?: boolean;
+  mentionables?: Mentionable[];
 }) {
-  const [draft, setDraft] = useState("");
   const [pickerFor, setPickerFor] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const names = new Set(mentionables.map((item) => item.name));
 
   const canReact = onToggleReaction !== undefined && !disabled;
   const isEmpty = !loading && messages.length === 0;
@@ -91,6 +100,19 @@ export function ChatView({
                   new Date(previous.createdAt).getTime() <
                   GROUP_WINDOW_MS;
 
+              if (message.run) {
+                return (
+                  <li key={message.id} className="mt-3 first:mt-0">
+                    <AgentRunCard
+                      run={message.run}
+                      canStop={onStopRun !== undefined}
+                      stopping={stoppingRun}
+                      onStop={(runId) => onStopRun?.(runId)}
+                    />
+                  </li>
+                );
+              }
+
               const mine = message.isYou === true;
               const isAgent = message.author.kind === "bot";
               const isGuest = message.author.kind === "guest";
@@ -106,28 +128,34 @@ export function ChatView({
                 >
                   {!mine && (
                     <span className="w-6 shrink-0">
-                      {!grouped && (
-                        <span
-                          className={cn(
-                            "mt-4 grid size-6 place-items-center overflow-hidden bg-secondary",
-                            isAgent ? "rounded-md" : "rounded-full",
-                            isGuest &&
-                              "bg-muted outline-1 -outline-offset-1 outline-dashed outline-border"
-                          )}
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={personAvatar(
-                              message.author.avatarSeed,
-                              isAgent ? "agent" : "human",
-                              56
-                            )}
-                            alt=""
-                            aria-hidden
-                            className="size-full select-none"
+                      {!grouped &&
+                        (isAgent ? (
+                          <AgentAvatar
+                            provider={message.author.provider}
+                            seed={message.author.avatarSeed}
+                            className="mt-4 size-6"
                           />
-                        </span>
-                      )}
+                        ) : (
+                          <span
+                            className={cn(
+                              "mt-4 grid size-6 place-items-center overflow-hidden rounded-full bg-secondary",
+                              isGuest &&
+                                "bg-muted outline-1 -outline-offset-1 outline-dashed outline-border"
+                            )}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={personAvatar(
+                                message.author.avatarSeed,
+                                "human",
+                                56
+                              )}
+                              alt=""
+                              aria-hidden
+                              className="size-full select-none"
+                            />
+                          </span>
+                        ))}
                     </span>
                   )}
 
@@ -187,7 +215,23 @@ export function ChatView({
                             "bg-agent/10 text-foreground ring-1 ring-agent/20"
                         )}
                       >
-                        {message.body}
+                        {splitMentions(message.body, names).map((part, at) =>
+                          part.isMention ? (
+                            <span
+                              key={at}
+                              className={cn(
+                                "rounded-[3px] px-1 py-px font-medium",
+                                mine
+                                  ? "bg-primary-foreground/15 text-primary-foreground"
+                                  : "bg-agent/12 text-agent dark:bg-agent/20"
+                              )}
+                            >
+                              {part.text}
+                            </span>
+                          ) : (
+                            <span key={at}>{part.text}</span>
+                          )
+                        )}
                       </p>
 
                       {canReact && (
@@ -228,44 +272,14 @@ export function ChatView({
         </div>
       </div>
 
-      <div className="shrink-0 p-2.5">
-        <form
-          className="flex items-end gap-2 rounded-xl border border-border bg-card p-1.5 transition-colors focus-within:border-foreground/25"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const body = draft.trim();
-            if (!body) return;
-            onSend(body);
-            setDraft("");
-          }}
-        >
-          <textarea
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                event.currentTarget.form?.requestSubmit();
-              }
-            }}
-            rows={1}
-            placeholder={placeholder}
-            aria-label="Message"
-            disabled={disabled}
-            className="max-h-28 min-h-7 flex-1 resize-none bg-transparent px-1.5 py-1 text-[12.5px] leading-[1.5] outline-none placeholder:text-muted-foreground disabled:opacity-50"
-          />
+      <ChatComposer
+        sending={sending}
+        disabled={disabled}
+        placeholder={placeholder}
+        mentionables={mentionables}
+        onSend={onSend}
+      />
 
-          <Button
-            type="submit"
-            size="icon-sm"
-            aria-label="Send"
-            disabled={disabled || sending || !draft.trim()}
-            className="shrink-0"
-          >
-            {sending ? <Spinner label="Sending" /> : <ArrowUp />}
-          </Button>
-        </form>
-      </div>
     </div>
   );
 }

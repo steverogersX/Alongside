@@ -26,3 +26,6 @@ export const notFound = (message = "Not found") =>
 
 export const conflict = (message: string) =>
   new AppError(409, "conflict", message);
+
+export const badGateway = (message: string) =>
+  new AppError(502, "provider_error", message);

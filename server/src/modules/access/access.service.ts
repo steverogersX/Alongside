@@ -2,29 +2,53 @@ import type { Request } from "express";
 
 import type { ChatAccess, Role, User } from "@/db/types.ts";
 import { accessRepository } from "@/modules/access/access.repository.ts";
+import { createCache } from "@/shared/cache.ts";
 import { forbidden, notFound } from "@/shared/errors.ts";
 import { atLeast, highest, lower } from "@/shared/role.ts";
 
+// Role lookups are the hottest read in the system — every request, every agent
+// tool call, every socket upgrade. Grants change rarely, and when they do the
+// cache is dropped outright rather than expired.
+const roleCache = createCache<Role | null>({ ttlMs: 15_000, max: 5_000 });
+const agentsCache = createCache<User[]>({ ttlMs: 15_000, max: 1_000 });
+
+export function forgetAccess() {
+  roleCache.clear();
+  agentsCache.clear();
+}
+
 export const accessService = {
   async workspaceRole(user: User, workspaceId: string): Promise<Role | null> {
-    const workspace = await accessRepository.findWorkspace(workspaceId);
-    if (!workspace || workspace.orgId !== user.orgId) return null;
-    if (user.isOrgAdmin) return "admin";
+    return roleCache.wrap(`ws:${user.id}:${workspaceId}`, async () => {
+      const workspace = await accessRepository.findWorkspace(workspaceId);
+      if (!workspace || workspace.orgId !== user.orgId) return null;
+      if (user.isOrgAdmin) return "admin";
 
-    return highest(await accessRepository.rolesForWorkspace(user.id, workspaceId));
+      return highest(
+        await accessRepository.rolesForWorkspace(user.id, workspaceId)
+      );
+    });
   },
 
   async documentRole(user: User, documentId: string): Promise<Role | null> {
-    const row = await accessRepository.findDocumentWithWorkspace(documentId);
-    if (!row || row.workspace.orgId !== user.orgId) return null;
-    if (user.isOrgAdmin) return "admin";
+    return roleCache.wrap(`doc:${user.id}:${documentId}`, async () => {
+      const row = await accessRepository.findDocumentWithWorkspace(documentId);
+      if (!row || row.workspace.orgId !== user.orgId) return null;
+      if (user.isOrgAdmin) return "admin";
 
-    return highest(
-      await accessRepository.rolesForDocument(
-        user.id,
-        documentId,
-        row.workspace.id
-      )
+      return highest(
+        await accessRepository.rolesForDocument(
+          user.id,
+          documentId,
+          row.workspace.id
+        )
+      );
+    });
+  },
+
+  async agentsForDocument(documentId: string) {
+    return agentsCache.wrap(`agents:${documentId}`, () =>
+      accessRepository.agentsForDocument(documentId)
     );
   },
 

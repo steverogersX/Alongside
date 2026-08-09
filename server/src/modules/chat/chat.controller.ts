@@ -16,8 +16,8 @@ export const chatController = {
   post: publicRoute(
     { params: idParams, body: postMessageSchema, query: noQuery },
     async ({ params, body, req, res }) => {
-      const message = await chatService.post(req, params.id, body);
-      created(res, { message });
+      const { run, ...message } = await chatService.post(req, params.id, body);
+      created(res, { message, run });
     }
   ),
 

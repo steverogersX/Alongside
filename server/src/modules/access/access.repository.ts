@@ -56,6 +56,29 @@ export const accessRepository = {
     return rows.map((row) => row.role as Role);
   },
 
+  async agentsForDocument(documentId: string) {
+    const rows = await db
+      .selectDistinctOn([users.id])
+      .from(grants)
+      .innerJoin(users, eq(users.id, grants.userId))
+      .innerJoin(
+        documents,
+        or(
+          eq(documents.id, grants.documentId),
+          eq(documents.workspaceId, grants.workspaceId)
+        )
+      )
+      .where(
+        and(
+          eq(documents.id, documentId),
+          eq(users.kind, "bot"),
+          isNull(users.deletedAt)
+        )
+      );
+
+    return rows.map((row) => row.users);
+  },
+
   async findAgent(agentId: string, orgId: string) {
     const [agent] = await db
       .select()

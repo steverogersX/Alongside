@@ -61,3 +61,6 @@ export async function api<T>(
 
 export const apiPost = <T>(path: string, body: unknown) =>
   api<T>(path, { method: "POST", body: JSON.stringify(body) });
+
+export const apiDelete = <T>(path: string) =>
+  api<T>(path, { method: "DELETE" });

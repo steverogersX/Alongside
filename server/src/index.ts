@@ -2,6 +2,7 @@ import { createApp } from "@/app.ts";
 import { env } from "@/config/env.ts";
 import { pool } from "@/db/client.ts";
 import { mountCollabServer } from "@/modules/collab/collab.server.ts";
+import { startRunWorker } from "@/modules/runs/run.worker.ts";
 
 const app = createApp();
 
@@ -10,6 +11,7 @@ const server = app.listen(env.PORT, () => {
 });
 
 mountCollabServer(server);
+startRunWorker();
 
 function shutdown(signal: string) {
   console.log(`${signal} received, closing`);

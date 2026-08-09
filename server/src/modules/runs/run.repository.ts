@@ -1,7 +1,7 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 
 import { db, type Tx } from "@/db/client.ts";
-import { agentRuns } from "@/db/schema/index.ts";
+import { agentRuns, documents } from "@/db/schema/index.ts";
 import type { Role, RunStatus } from "@/db/types.ts";
 
 export const runRepository = {
@@ -35,10 +35,93 @@ export const runRepository = {
       invokedBy: string;
       prompt: string;
       ceiling: Role;
+      status?: RunStatus;
+      triggerMessageId?: string;
     }
   ) {
     const [run] = await tx.insert(agentRuns).values(input).returning();
     return run!;
+  },
+
+  async find(runId: string) {
+    const [run] = await db
+      .select()
+      .from(agentRuns)
+      .where(eq(agentRuns.id, runId))
+      .limit(1);
+
+    return run ?? null;
+  },
+
+  /**
+   * One run per document at a time: the same agent asked by three people would
+   * otherwise race itself, and each edit would invalidate the others' anchors.
+   * SKIP LOCKED keeps two workers from claiming the same row.
+   */
+  async claimNext() {
+    const claimed = await db.execute<{ id: string }>(sql`
+      update agent_runs set
+        status = 'running',
+        claimed_at = now(),
+        attempts = attempts + 1
+      where id = (
+        select r.id from agent_runs r
+        where r.status = 'queued'
+          and not exists (
+            select 1 from agent_runs busy
+            where busy.document_id = r.document_id
+              and busy.status = 'running'
+          )
+        order by r.created_at
+        limit 1
+        for update skip locked
+      )
+      returning id
+    `);
+
+    const id = claimed.rows[0]?.id;
+    return id ? this.find(id) : null;
+  },
+
+  async claim(runId: string, connectionId: string) {
+    const claimed = await db.execute<{ id: string }>(sql`
+      update agent_runs set
+        status = 'running',
+        connection_id = ${connectionId},
+        claimed_at = now(),
+        attempts = attempts + 1
+      where id = (
+        select id from agent_runs
+        where id = ${runId} and status = 'queued'
+        for update skip locked
+      )
+      returning id
+    `);
+
+    return claimed.rows[0] ? this.find(runId) : null;
+  },
+
+  async queuedForUser(userId: string, limit: number) {
+    return db
+      .select({ run: agentRuns, document: documents })
+      .from(agentRuns)
+      .innerJoin(documents, eq(documents.id, agentRuns.documentId))
+      .where(and(eq(agentRuns.invokedBy, userId), eq(agentRuns.status, "queued")))
+      .orderBy(desc(agentRuns.createdAt))
+      .limit(limit);
+  },
+
+  async finish(
+    runId: string,
+    input: { status: RunStatus; summary?: string | null; error?: string | null }
+  ) {
+    const [run] = await db
+      .update(agentRuns)
+      .set({ ...input, endedAt: new Date() })
+      .where(eq(agentRuns.id, runId))
+      .returning();
+
+    return run ?? null;
   },
 
   async settle(

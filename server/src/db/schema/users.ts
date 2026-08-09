@@ -29,6 +29,10 @@ export const users = pgTable(
 
     email: text("email"),
     model: text("model"),
+    provider: text("provider"),
+    baseUrl: text("base_url"),
+    keyCipher: text("key_cipher"),
+    keyLast4: text("key_last4"),
     createdBy: uuid("created_by"),
 
     createdAt: timestamp("created_at", { withTimezone: true })

@@ -1,5 +1,6 @@
 import {
   index,
+  integer,
   jsonb,
   pgTable,
   text,
@@ -7,6 +8,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { agentConnections } from "@/db/schema/agent-connections.ts";
 import { documents } from "@/db/schema/documents.ts";
 import { roleName, runStatus } from "@/db/schema/enums.ts";
 import { users } from "@/db/schema/users.ts";
@@ -26,10 +28,17 @@ export const agentRuns = pgTable(
       .references(() => users.id),
     prompt: text("prompt").notNull(),
     ceiling: roleName("ceiling").notNull(),
-    status: runStatus("status").notNull().default("running"),
+    status: runStatus("status").notNull().default("queued"),
     proposal: jsonb("proposal"),
     summary: text("summary"),
+    error: text("error"),
     decidedBy: uuid("decided_by").references(() => users.id),
+    triggerMessageId: uuid("trigger_message_id"),
+    connectionId: uuid("connection_id").references(() => agentConnections.id, {
+      onDelete: "set null",
+    }),
+    claimedAt: timestamp("claimed_at", { withTimezone: true }),
+    attempts: integer("attempts").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

@@ -2,13 +2,14 @@
 
 import { use } from "react";
 import Link from "next/link";
-import { ChevronRight, Share2 } from "lucide-react";
+import { Bot, ChevronRight, Share2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Shell, ShellHeader, ShellRail } from "@/components/shell";
 import { DocumentView } from "@/components/doc/document-view";
 import { DocPanel } from "@/components/doc/doc-panel";
 import { ShareDialog } from "@/components/doc/share-dialog";
+import { AgentsDialog } from "@/components/workspace/agents-dialog";
 import { useDocument, useWorkspace } from "@/lib/queries";
 
 export default function DocumentPage({
@@ -45,7 +46,16 @@ export default function DocumentPage({
           {document.data?.document.title ?? "…"}
         </span>
 
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-2">
+          <AgentsDialog
+            workspaceId={id}
+            trigger={
+              <Button variant="ghost" size="sm">
+                <Bot />
+                Agents
+              </Button>
+            }
+          />
           {canShare && (
             <ShareDialog
               documentId={docId}

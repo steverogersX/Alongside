@@ -1,10 +1,18 @@
 import type { Request } from "express";
 
+import { db } from "@/db/client.ts";
 import type { ChatMessage, User } from "@/db/types.ts";
 import { accessService } from "@/modules/access/access.service.ts";
 import { toPublicUser } from "@/modules/auth/auth.mapper.ts";
+import {
+  findMentions,
+  firstName,
+  stripMention,
+} from "@/modules/chat/chat.mention.ts";
 import { chatRepository } from "@/modules/chat/chat.repository.ts";
+import { notify } from "@/modules/collab/collab.events.ts";
 import type { PostMessageInput } from "@/modules/chat/chat.schema.ts";
+import { runRepository } from "@/modules/runs/run.repository.ts";
 import { forbidden, notFound } from "@/shared/errors.ts";
 import type { PaginationQuery } from "@/shared/validation.ts";
 
@@ -56,13 +64,34 @@ export const chatService = {
     }
 
     if (req.user) {
-      const message = await chatRepository.create({
-        documentId,
-        body: input.body,
-        authorId: req.user.id,
+      const invoker = req.user;
+      const agent = await this.resolveMention(invoker, documentId, input.body);
+
+      const { message, run } = await db.transaction(async (tx) => {
+        const message = await chatRepository.create(
+          { documentId, body: input.body, authorId: invoker.id },
+          tx
+        );
+
+        if (!agent) return { message, run: null };
+
+        const run = await runRepository.create(tx, {
+          documentId,
+          agentId: agent.user.id,
+          invokedBy: invoker.id,
+          prompt: stripMention(input.body, agent.name),
+          ceiling: agent.ceiling,
+          status: "queued",
+          triggerMessageId: message.id,
+        });
+
+        return { message, run };
       });
 
-      return present({ message, author: req.user });
+      notify(documentId, "chat");
+      if (run) notify(documentId, "runs");
+
+      return { ...present({ message, author: invoker }), run };
     }
 
     const link = req.link!;
@@ -74,7 +103,37 @@ export const chatService = {
       authorName: link.guestName,
     });
 
-    return present({ message, author: null });
+    notify(documentId, "chat");
+
+    return { ...present({ message, author: null }), run: null };
+  },
+
+  /**
+   * Only a human's message can start a run — an agent that mentions itself in
+   * its own reply would otherwise queue work forever.
+   */
+  async resolveMention(invoker: User, documentId: string, body: string) {
+    if (invoker.kind !== "human") return null;
+
+    const names = findMentions(body);
+    if (names.length === 0) return null;
+
+    const agents = await accessService.agentsForDocument(documentId);
+
+    for (const name of names) {
+      const agent = agents.find((row) => firstName(row.displayName) === name);
+      if (!agent) continue;
+
+      const ceiling = await accessService.resolveCeiling(
+        agent.id,
+        invoker,
+        documentId
+      );
+
+      return { user: agent, name, ceiling };
+    }
+
+    return null;
   },
 
   async access(req: Request, documentId: string) {

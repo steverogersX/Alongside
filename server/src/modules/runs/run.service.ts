@@ -2,6 +2,7 @@ import { db } from "@/db/client.ts";
 import type { Document, User } from "@/db/types.ts";
 import { accessService } from "@/modules/access/access.service.ts";
 import { chatRepository } from "@/modules/chat/chat.repository.ts";
+import { notify } from "@/modules/collab/collab.events.ts";
 import { documentRepository } from "@/modules/documents/document.repository.ts";
 import { runRepository } from "@/modules/runs/run.repository.ts";
 import type {
@@ -43,6 +44,30 @@ export const runService = {
 
       return run;
     });
+  },
+
+  async cancel(user: User, documentId: string, runId: string) {
+    await accessService.requireDocumentRole(user, documentId, "viewer");
+
+    const run = await runRepository.findForDocument(runId, documentId);
+    if (!run) throw notFound("Run not found");
+
+    if (run.status !== "queued" && run.status !== "running") {
+      throw badRequest("That run has already finished");
+    }
+
+    if (run.invokedBy !== user.id) {
+      await accessService.requireDocumentRole(user, documentId, "editor");
+    }
+
+    const cancelled = await runRepository.finish(run.id, {
+      status: "cancelled",
+      summary: "Stopped before it finished.",
+    });
+
+    notify(documentId, "runs");
+
+    return cancelled;
   },
 
   async decide(

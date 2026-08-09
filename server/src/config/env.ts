@@ -7,7 +7,8 @@ const schema = z.object({
   DATABASE_URL: z.string().min(1),
   SESSION_SECRET: z.string().min(32),
   CORS_ORIGIN: z.string().default("http://localhost:3020"),
-  ANTHROPIC_API_KEY: z.string().optional(),
+  API_ORIGIN: z.string().default("http://localhost:4000"),
+  CREDENTIALS_KEY: z.string().min(32),
 });
 
 const parsed = schema.safeParse(process.env);

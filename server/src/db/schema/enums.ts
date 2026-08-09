@@ -10,4 +10,7 @@ export const runStatus = pgEnum("run_status", [
   "accepted",
   "discarded",
   "failed",
+  "queued",
+  "succeeded",
+  "cancelled",
 ]);

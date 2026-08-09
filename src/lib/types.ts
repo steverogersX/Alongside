@@ -9,6 +9,7 @@ export type Member = {
   isOrgAdmin: boolean;
   email: string | null;
   model: string | null;
+  provider: string | null;
 };
 
 export type Workspace = {
@@ -57,9 +58,20 @@ export type AgentRun = {
   invokedBy: string;
   prompt: string;
   ceiling: Role;
-  status: "running" | "proposed" | "accepted" | "discarded" | "failed";
+  status:
+    | "queued"
+    | "running"
+    | "succeeded"
+    | "failed"
+    | "cancelled"
+    | "proposed"
+    | "accepted"
+    | "discarded";
   proposal: unknown;
   summary: string | null;
+  error: string | null;
+  connectionId: string | null;
+  triggerMessageId: string | null;
   decidedBy: string | null;
   createdAt: string;
   endedAt: string | null;
@@ -80,4 +92,16 @@ export type DocumentLink = {
 export type LinkSession = {
   documentId: string;
   role: Role;
+};
+
+export type Connection = {
+  id: string;
+  label: string;
+  agentId: string;
+  agentName: string;
+  model: string | null;
+  workspaceIds: string[] | null;
+  lastSeenAt: string | null;
+  revokedAt: string | null;
+  createdAt: string;
 };
