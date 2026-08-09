@@ -1,6 +1,14 @@
 "use client";
 
 import { Plug } from "lucide-react";
+import {
+  siAnthropic,
+  siDeepseek,
+  siGooglegemini,
+  siKimi,
+  siMinimax,
+  siMistralai,
+} from "simple-icons";
 
 import { cn } from "@/lib/utils";
 
@@ -64,7 +72,11 @@ export const PROVIDERS: {
   {
     id: "mistral",
     name: "Mistral",
-    models: ["mistral-large-latest", "mistral-medium-latest", "codestral-latest"],
+    models: [
+      "mistral-large-latest",
+      "mistral-medium-latest",
+      "codestral-latest",
+    ],
     keyHint: "…",
     baseUrl: "https://api.mistral.ai/v1",
   },
@@ -80,6 +92,29 @@ export const PROVIDERS: {
 export const providerOf = (id: ProviderId) =>
   PROVIDERS.find((row) => row.id === id)!;
 
+const BRAND: Partial<
+  Record<ProviderId, { path: string; hex: string; title: string }>
+> = {
+  anthropic: { path: siAnthropic.path, hex: siAnthropic.hex, title: "Anthropic" },
+  google: {
+    path: siGooglegemini.path,
+    hex: siGooglegemini.hex,
+    title: "Google Gemini",
+  },
+  moonshot: { path: siKimi.path, hex: siKimi.hex, title: "Kimi" },
+  deepseek: { path: siDeepseek.path, hex: siDeepseek.hex, title: "DeepSeek" },
+  minimax: { path: siMinimax.path, hex: siMinimax.hex, title: "MiniMax" },
+  mistral: {
+    path: siMistralai.path,
+    hex: siMistralai.hex,
+    title: "Mistral AI",
+  },
+};
+
+// Brands whose black mark disappears on a dark surface follow the text colour
+// instead of their hex.
+const MONOCHROME = new Set<ProviderId>(["anthropic", "moonshot"]);
+
 export function ProviderMark({
   provider,
   className,
@@ -88,12 +123,18 @@ export function ProviderMark({
   className?: string;
 }) {
   const shared = cn("size-4 shrink-0", className);
+  const brand = BRAND[provider];
 
-  if (provider === "anthropic") {
+  if (brand) {
     return (
-      <svg viewBox="0 0 24 24" aria-hidden className={shared} fill="#D97757">
-        <path d="M6.9 4h3.5l5.4 16h-3.6l-1.1-3.4H5.9L4.8 20H1.2L6.9 4Zm-.1 9.6h3.7L8.6 8.1 6.8 13.6Z" />
-        <path d="M16.3 4h3.6L22.8 20h-3.6L16.3 4Z" opacity=".55" />
+      <svg
+        viewBox="0 0 24 24"
+        role="img"
+        aria-label={brand.title}
+        className={cn(shared, MONOCHROME.has(provider) && "text-foreground")}
+        fill={MONOCHROME.has(provider) ? "currentColor" : `#${brand.hex}`}
+      >
+        <path d={brand.path} />
       </svg>
     );
   }
@@ -102,70 +143,12 @@ export function ProviderMark({
     return (
       <svg
         viewBox="0 0 24 24"
-        aria-hidden
+        role="img"
+        aria-label="OpenAI"
         className={cn(shared, "text-foreground")}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
+        fill="currentColor"
       >
-        <path d="M12 3.2 18.4 7v8L12 18.8 5.6 15V7L12 3.2Z" />
-        <path d="M12 3.2v7.6M18.4 7 12 10.8M5.6 7 12 10.8M12 10.8v8" />
-      </svg>
-    );
-  }
-
-  if (provider === "google") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden className={shared} fill="#4285F4">
-        <path d="M12 1.5c0 5.8 4.7 10.5 10.5 10.5C16.7 12 12 16.7 12 22.5 12 16.7 7.3 12 1.5 12 7.3 12 12 7.3 12 1.5Z" />
-      </svg>
-    );
-  }
-
-  if (provider === "moonshot") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden className={shared} fill="#1F1F1F">
-        <circle cx="12" cy="12" r="11" fill="#111827" />
-        <path
-          d="M15.8 15.6A5.6 5.6 0 0 1 9 8.2a5.6 5.6 0 1 0 6.8 7.4Z"
-          fill="#F5F5F5"
-        />
-      </svg>
-    );
-  }
-
-  if (provider === "deepseek") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden className={shared} fill="#4D6BFE">
-        <path d="M21 6.5c-2 .6-3 2.2-3.4 3.9-1.5-2.4-4.2-4-7.2-4a8.4 8.4 0 0 0-8.4 8.4c0 .5.4.9.9.9.4 0 .8-.3.9-.7A6.6 6.6 0 0 1 10.4 9c3 0 5.5 2 6.3 4.8.2.9.2 1.4.2 2.2 0 .6.4 1 1 1s1-.4 1-1c0-2.4.6-4.2 2.6-5.2.4-.2.6-.6.5-1l-.4-2.6a.9.9 0 0 0-.6-.7Z" />
-        <circle cx="9.6" cy="12.4" r="1.2" fill="#fff" />
-      </svg>
-    );
-  }
-
-  if (provider === "minimax") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden className={shared}>
-        <rect width="24" height="24" rx="6" fill="#E8452C" />
-        <path
-          d="M6 17V7h2.2l3.8 6.4L15.8 7H18v10h-2.1v-6.3L12.6 16h-1.2L8.1 10.7V17H6Z"
-          fill="#fff"
-        />
-      </svg>
-    );
-  }
-
-  if (provider === "mistral") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden className={shared}>
-        <rect x="2" y="4" width="20" height="3.2" fill="#FFD800" />
-        <rect x="2" y="7.2" width="20" height="3.2" fill="#FFAF00" />
-        <rect x="2" y="10.4" width="20" height="3.2" fill="#FF8205" />
-        <rect x="2" y="13.6" width="20" height="3.2" fill="#FA500F" />
-        <rect x="2" y="16.8" width="20" height="3.2" fill="#E10500" />
-        <rect x="6" y="7.2" width="3.5" height="12.8" fill="var(--card)" />
-        <rect x="14.5" y="7.2" width="3.5" height="9.6" fill="var(--card)" />
+        <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.872zm16.597 3.855-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zM8.307 12.863l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365 2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z" />
       </svg>
     );
   }
