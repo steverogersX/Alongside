@@ -49,6 +49,7 @@ export function useWorkspaces() {
   return useQuery({
     queryKey: keys.workspaces,
     queryFn: () => api<{ workspaces: Workspace[] }>("/workspaces"),
+    staleTime: 60_000,
   });
 }
 
@@ -57,6 +58,7 @@ export function useWorkspace(id: string) {
     queryKey: keys.workspace(id),
     queryFn: () => api<WorkspaceDetail>(`/workspaces/${id}`),
     enabled: Boolean(id),
+    staleTime: 60_000,
   });
 }
 
@@ -70,6 +72,7 @@ export function useDocument(id: string) {
         via: "member" | "link";
       }>(`/documents/${id}`),
     enabled: Boolean(id),
+    staleTime: 30_000,
   });
 }
 
@@ -91,6 +94,7 @@ export function useChatAccess(documentId: string) {
         `/documents/${documentId}/chat/access`
       ),
     enabled: Boolean(documentId),
+    staleTime: 60_000,
     retry: false,
   });
 }
@@ -108,6 +112,7 @@ export function useOrgAgents() {
   return useQuery({
     queryKey: keys.agents,
     queryFn: () => api<{ agents: Member[] }>("/agents"),
+    staleTime: 60_000,
   });
 }
 
@@ -150,6 +155,7 @@ export function useConnections(poll = false) {
   return useQuery({
     queryKey: keys.connections,
     queryFn: () => api<{ connections: Connection[] }>("/connections"),
+    staleTime: 30_000,
     refetchInterval: poll ? 2000 : false,
   });
 }
