@@ -11,8 +11,8 @@ on:
 
 # A second push while one deploy is mid-flight would race the first; queue them.
 concurrency:
-  group: deploy-${{ github.ref }}
-  cancel-in-progress: false
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   check:
@@ -46,6 +46,16 @@ jobs:
       - name: Typecheck api
         run: npx tsc --noEmit
         working-directory: server
+
+      # Last, because it is the slowest and the cheap checks above catch most
+      # of what it would. A build still finds what neither can: a route that
+      # cannot be rendered, or an import that only resolves in dev.
+      - name: Build api
+        run: npm run build
+        working-directory: server
+
+      - name: Build web
+        run: npm run build
 
   deploy:
     needs: check
