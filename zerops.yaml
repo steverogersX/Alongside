@@ -8,7 +8,6 @@ zerops:
       deployFiles:
         - server/dist
         - server/drizzle
-        - server/drizzle.config.ts
         - server/package.json
         - server/node_modules
       cache:
@@ -18,7 +17,7 @@ zerops:
         httpGet:
           port: 4000
           path: /api/health
-        failureTimeout: 90
+        failureTimeout: 90s
     run:
       base: nodejs@22
       ports:
@@ -27,19 +26,20 @@ zerops:
       # Migrations run before the process starts, so a deploy that changes the
       # schema can never serve traffic against the old one.
       initCommands:
-        - cd server && npx drizzle-kit migrate
+        - node server/dist/db/migrate.js
       start: node server/dist/index.js
       healthCheck:
         httpGet:
           port: 4000
           path: /api/health
-        execPeriod: 30
+        execPeriod: 30s
       envVariables:
         NODE_ENV: production
         PORT: 4000
         DATABASE_URL: ${db_connectionString}
-        SESSION_SECRET: ${SESSION_SECRET}
-        CREDENTIALS_KEY: ${CREDENTIALS_KEY}
+        # SESSION_SECRET and CREDENTIALS_KEY come from the service's own
+        # secrets — redeclaring them here would overwrite them with an empty
+        # self-reference.
         API_ORIGIN: ${zeropsSubdomain}
         CORS_ORIGIN: ${web_zeropsSubdomain}
 
@@ -67,7 +67,7 @@ zerops:
         httpGet:
           port: 3000
           path: /
-        failureTimeout: 90
+        failureTimeout: 90s
     run:
       base: nodejs@22
       ports:
