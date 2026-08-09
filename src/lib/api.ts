@@ -30,16 +30,22 @@ export class ApiRequestError extends Error {
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
 
+/** `baseUrl` is for the server, which reaches the API on a different address. */
+type RequestOptions = RequestInit & { baseUrl?: string };
+
 export async function api<T>(
   path: string,
-  init: RequestInit = {}
+  init: RequestOptions = {}
 ): Promise<T> {
-  const response = await fetch(`${BASE_URL}${path}`, {
-    ...init,
+  const { baseUrl = BASE_URL, ...rest } = init;
+
+  const response = await fetch(`${baseUrl}${path}`, {
+    ...rest,
     credentials: "include",
+    // After the spread, or a caller passing headers would drop the type.
     headers: {
       "content-type": "application/json",
-      ...init.headers,
+      ...rest.headers,
     },
   });
 
