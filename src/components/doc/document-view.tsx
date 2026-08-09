@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback } from "react";
-
 import { Badge } from "@/components/ui/badge";
-import { DocEditor } from "@/components/doc/doc-editor";
+import { CollabEditor } from "@/components/doc/collab-editor";
+import { PresenceBar } from "@/components/doc/presence-bar";
 import { DocumentSkeleton } from "@/components/skeletons";
-import { useDocument, useSaveDocument } from "@/lib/queries";
+import { useCollabSession } from "@/lib/collab";
+import { useAwareness } from "@/lib/use-awareness";
+import { useDocument } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -16,16 +17,13 @@ const STATUS_LABEL: Record<string, string> = {
 
 export function DocumentView({ documentId }: { documentId: string }) {
   const document = useDocument(documentId);
-  const save = useSaveDocument(documentId);
-
-  const handleSave = useCallback(
-    (content: unknown) => save.mutate({ content }),
-    [save]
-  );
 
   const doc = document.data?.document;
   const role = document.data?.role;
   const canEdit = role === "editor" || role === "admin";
+
+  const { session, status } = useCollabSession(documentId, Boolean(doc));
+  const viewers = useAwareness(session);
 
   if (document.isPending) return <DocumentSkeleton />;
 
@@ -54,28 +52,27 @@ export function DocumentView({ documentId }: { documentId: string }) {
         >
           {STATUS_LABEL[doc.status]}
         </Badge>
-        <span className="text-[12px] text-muted-foreground">
-          Edited{" "}
-          {new Date(doc.updatedAt).toLocaleString(undefined, {
-            month: "short",
-            day: "numeric",
-            hour: "numeric",
-            minute: "2-digit",
-          })}
-        </span>
+
         {!canEdit && (
           <span className="text-[12px] text-muted-foreground">Read only</span>
         )}
+
+        <span className="ml-auto">
+          <PresenceBar viewers={viewers} />
+        </span>
       </div>
 
       <div className="mt-6 flex flex-1 flex-col">
-        <DocEditor
-          key={doc.id}
-          content={doc.content}
-          editable={canEdit}
-          onSave={handleSave}
-          saving={save.isPending}
-        />
+        {session ? (
+          <CollabEditor
+            session={session}
+            editable={canEdit}
+            seed={doc.content}
+            connected={status === "connected"}
+          />
+        ) : (
+          <DocumentSkeleton />
+        )}
       </div>
     </>
   );

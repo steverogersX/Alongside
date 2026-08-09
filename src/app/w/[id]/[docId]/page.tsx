@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Shell, ShellHeader, ShellRail } from "@/components/shell";
 import { DocumentView } from "@/components/doc/document-view";
 import { DocPanel } from "@/components/doc/doc-panel";
-import { PresenceBar } from "@/components/doc/presence-bar";
 import { ShareDialog } from "@/components/doc/share-dialog";
 import { useDocument, useWorkspace } from "@/lib/queries";
 
@@ -47,8 +46,6 @@ export default function DocumentPage({
         </span>
 
         <div className="ml-auto flex items-center gap-3">
-          <PresenceBar documentId={docId} />
-
           {canShare && (
             <ShareDialog
               documentId={docId}

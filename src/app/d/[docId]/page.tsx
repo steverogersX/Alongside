@@ -6,7 +6,6 @@ import { Eye, Pencil } from "lucide-react";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DocumentView } from "@/components/doc/document-view";
-import { PresenceBar } from "@/components/doc/presence-bar";
 import { useDocument } from "@/lib/queries";
 
 export default function SharedDocumentPage({
@@ -43,14 +42,10 @@ export default function SharedDocumentPage({
             </span>
           )}
 
-          <span className="ml-auto flex items-center gap-3">
-            <PresenceBar documentId={docId} ringClass="ring-background" />
-          </span>
-
           {isMember && (
             <Link
               href={`/w/${document.data?.document.workspaceId}/${docId}`}
-              className="text-[12.5px] text-muted-foreground transition-colors hover:text-foreground"
+              className="ml-auto text-[12.5px] text-muted-foreground transition-colors hover:text-foreground"
             >
               Open in workspace
             </Link>
