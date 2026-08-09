@@ -6,12 +6,13 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-import { api, apiPost } from "@/lib/api";
+import { api, apiDelete, apiPost } from "@/lib/api";
 import type { SessionUser } from "@/lib/auth";
 import type {
   AgentRun,
   ChatAccess,
   ChatMessage,
+  Connection,
   DocumentLink,
   DocumentSummary,
   LinkSession,
@@ -31,6 +32,7 @@ export const keys = {
   chatAccess: (id: string) => ["chat-access", id] as const,
   runs: (id: string) => ["runs", id] as const,
   links: (id: string) => ["links", id] as const,
+  connections: ["connections"] as const,
   linkSession: ["link-session"] as const,
 };
 
@@ -142,6 +144,81 @@ export function useAddMember(workspaceId: string) {
   });
 }
 
+export function useConnections(poll = false) {
+  return useQuery({
+    queryKey: keys.connections,
+    queryFn: () => api<{ connections: Connection[] }>("/connections"),
+    refetchInterval: poll ? 2000 : false,
+  });
+}
+
+export function useCreateConnection() {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: { label: string; agentId: string }) =>
+      apiPost<{ connection: Connection; token: string; command: string }>(
+        "/connections",
+        input
+      ),
+    onSuccess: () =>
+      client.invalidateQueries({ queryKey: keys.connections }),
+  });
+}
+
+export function useRevokeConnection() {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => apiDelete(`/connections/${id}`),
+    onSuccess: () =>
+      client.invalidateQueries({ queryKey: keys.connections }),
+  });
+}
+
+export function useCreateAgent() {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: {
+      displayName: string;
+      model: string;
+      provider: string;
+      apiKey: string;
+      baseUrl?: string;
+    }) => apiPost<{ agent: Member }>("/agents", input),
+    onSuccess: () => client.invalidateQueries({ queryKey: keys.agents }),
+  });
+}
+
+export function useRemoveAgent(workspaceId: string) {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: (agentId: string) => apiDelete(`/agents/${agentId}`),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: keys.agents });
+      void client.invalidateQueries({ queryKey: keys.workspace(workspaceId) });
+    },
+  });
+}
+
+export function useCancelRun(documentId: string) {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: (runId: string) =>
+      apiPost<{ run: AgentRun }>(
+        `/documents/${documentId}/runs/${runId}/cancel`,
+        {}
+      ),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: keys.runs(documentId) });
+      void client.invalidateQueries({ queryKey: keys.chat(documentId) });
+    },
+  });
+}
+
 export function useSaveDocument(documentId: string) {
   const client = useQueryClient();
 
@@ -172,11 +249,14 @@ export function useSendMessage(documentId: string) {
 
   return useMutation({
     mutationFn: (body: string) =>
-      apiPost<{ message: ChatMessage }>(`/documents/${documentId}/chat`, {
-        body,
-      }),
-    onSuccess: () =>
-      client.invalidateQueries({ queryKey: keys.chat(documentId) }),
+      apiPost<{ message: ChatMessage; run: AgentRun | null }>(
+        `/documents/${documentId}/chat`,
+        { body }
+      ),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: keys.chat(documentId) });
+      void client.invalidateQueries({ queryKey: keys.runs(documentId) });
+    },
   });
 }
 
