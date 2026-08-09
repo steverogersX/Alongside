@@ -79,14 +79,30 @@ jobs:
         env:
           ZEROPS_TOKEN: ${{ secrets.ZEROPS_TOKEN }}
 
-      - name: Push ${{ matrix.setup }}
+      # zcli falls back to an interactive picker when it does not know where
+      # to deploy, which in CI surfaces as "allowed only in interactive
+      # terminal" rather than as a missing setting.
+      - name: Check deploy target
         run: |
-          zcli push \
-            --projectId "$PROJECT_ID" \
-            --setup "${{ matrix.setup }}" \
-            --serviceId "${{ matrix.serviceId }}"
+          missing=""
+          [ -n "$PROJECT_ID" ] || missing="$missing ZEROPS_PROJECT_ID"
+          [ -n "$SERVICE_ID" ] || missing="$missing service-id-for-${SETUP}"
+          if [ -n "$missing" ]; then
+            echo "Missing repository variables:$missing"
+            echo "Settings -> Secrets and variables -> Actions -> Variables"
+            exit 1
+          fi
         env:
           PROJECT_ID: ${{ vars.ZEROPS_PROJECT_ID }}
+          SERVICE_ID: ${{ matrix.serviceId }}
+          SETUP: ${{ matrix.setup }}
+
+      - name: Push ${{ matrix.setup }}
+        run: |
+          zcli push             --projectId "$PROJECT_ID"             --setup "${{ matrix.setup }}"             --serviceId "$SERVICE_ID"
+        env:
+          PROJECT_ID: ${{ vars.ZEROPS_PROJECT_ID }}
+          SERVICE_ID: ${{ matrix.serviceId }}
 
   smoke:
     needs: deploy
