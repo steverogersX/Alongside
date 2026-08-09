@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -110,9 +111,27 @@ export function Sidebar({
       </div>
 
       <div className="flex flex-col gap-0.5 overflow-y-auto px-2 pb-2">
+        {workspaces.isPending && (
+          <div
+            role="status"
+            aria-label="Loading workspaces"
+            className="flex flex-col gap-2 px-2 py-1.5"
+          >
+            {[0, 1, 2].map((index) => (
+              <div key={index} className="flex items-center gap-2">
+                <Skeleton className="size-4 shrink-0 rounded" />
+                <Skeleton
+                  className="h-2.5 flex-1"
+                  style={{ maxWidth: `${80 - index * 14}%` }}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
         {workspaces.data?.workspaces.length === 0 && (
           <p className="px-2 py-1 text-[12px] text-muted-foreground">
-            None yet
+            No workspaces yet
           </p>
         )}
         {workspaces.data?.workspaces.map((ws) => (
