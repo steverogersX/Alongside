@@ -45,6 +45,26 @@ export const runService = {
     });
   },
 
+  async cancel(user: User, documentId: string, runId: string) {
+    await accessService.requireDocumentRole(user, documentId, "viewer");
+
+    const run = await runRepository.findForDocument(runId, documentId);
+    if (!run) throw notFound("Run not found");
+
+    if (run.status !== "queued" && run.status !== "running") {
+      throw badRequest("That run has already finished");
+    }
+
+    if (run.invokedBy !== user.id) {
+      await accessService.requireDocumentRole(user, documentId, "editor");
+    }
+
+    return runRepository.finish(run.id, {
+      status: "cancelled",
+      summary: "Stopped before it finished.",
+    });
+  },
+
   async decide(
     user: User,
     documentId: string,

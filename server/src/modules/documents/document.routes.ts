@@ -23,6 +23,7 @@ documentRoutes.post("/:id/chat", chatController.post);
 
 documentRoutes.get("/:id/runs", requireUser, runController.list);
 documentRoutes.post("/:id/runs", requireUser, runController.start);
+documentRoutes.post("/:id/runs/:runId/cancel", requireUser, runController.cancel);
 documentRoutes.post("/:id/runs/:runId/decide", requireUser, runController.decide);
 
 documentRoutes.get("/:id/links", requireUser, linkController.list);
