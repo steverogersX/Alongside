@@ -20,6 +20,7 @@ import {
   useDocumentLinks,
   useRevokeLink,
 } from "@/lib/queries";
+import type { ChatAccess } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const EXPIRY = [
@@ -37,6 +38,7 @@ export function ShareDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [role, setRole] = useState<"viewer" | "editor">("viewer");
+  const [chat, setChat] = useState<ChatAccess>("none");
   const [days, setDays] = useState<number | undefined>(undefined);
   const [fresh, setFresh] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -49,7 +51,7 @@ export function ShareDialog({
 
   function create() {
     createLink.mutate(
-      { role, ...(days ? { expiresInDays: days } : {}) },
+      { role, chatAccess: chat, ...(days ? { expiresInDays: days } : {}) },
       {
         onSuccess: (result) => {
           setFresh(`${window.location.origin}/s/${result.token}`);
@@ -131,6 +133,21 @@ export function ShareDialog({
               />
             </div>
 
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[12.5px] text-muted-foreground">
+                Document chat
+              </span>
+              <Segmented
+                options={[
+                  { value: "none", label: "hidden" },
+                  { value: "read", label: "read" },
+                  { value: "write", label: "join in" },
+                ]}
+                value={chat}
+                onChange={(next) => setChat(next as ChatAccess)}
+              />
+            </div>
+
             <Button
               size="sm"
               className="w-fit"
@@ -173,6 +190,12 @@ export function ShareDialog({
                       {link.role === "editor" ? "edit" : "read"}
                     </span>
                     <span className="block truncate text-[11.5px] text-muted-foreground">
+                      {link.chatAccess === "none"
+                        ? "Chat hidden"
+                        : link.chatAccess === "read"
+                          ? "Can read chat"
+                          : "Can join chat"}
+                      {" · "}
                       {link.expiresAt
                         ? `Expires ${new Date(link.expiresAt).toLocaleDateString()}`
                         : "No expiry"}
