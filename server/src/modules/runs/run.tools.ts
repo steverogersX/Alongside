@@ -2,6 +2,7 @@ import type { AgentRun, User } from "@/db/types.ts";
 import { chatRepository } from "@/modules/chat/chat.repository.ts";
 import { agentPresence } from "@/modules/collab/collab.agent-presence.ts";
 import { collabDocument } from "@/modules/collab/collab.document.ts";
+import { notify } from "@/modules/collab/collab.events.ts";
 import { documentRepository } from "@/modules/documents/document.repository.ts";
 import type { ToolSpec } from "@/modules/providers/provider.types.ts";
 import { atLeast } from "@/shared/role.ts";
@@ -212,6 +213,8 @@ export async function runTool(
       authorId: agent.id,
       runId: run.id,
     });
+
+    notify(run.documentId, "chat");
 
     return { posted: true };
   }

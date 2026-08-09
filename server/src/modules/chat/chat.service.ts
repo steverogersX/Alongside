@@ -2,7 +2,6 @@ import type { Request } from "express";
 
 import { db } from "@/db/client.ts";
 import type { ChatMessage, User } from "@/db/types.ts";
-import { accessRepository } from "@/modules/access/access.repository.ts";
 import { accessService } from "@/modules/access/access.service.ts";
 import { toPublicUser } from "@/modules/auth/auth.mapper.ts";
 import {
@@ -11,6 +10,7 @@ import {
   stripMention,
 } from "@/modules/chat/chat.mention.ts";
 import { chatRepository } from "@/modules/chat/chat.repository.ts";
+import { notify } from "@/modules/collab/collab.events.ts";
 import type { PostMessageInput } from "@/modules/chat/chat.schema.ts";
 import { runRepository } from "@/modules/runs/run.repository.ts";
 import { forbidden, notFound } from "@/shared/errors.ts";
@@ -88,6 +88,9 @@ export const chatService = {
         return { message, run };
       });
 
+      notify(documentId, "chat");
+      if (run) notify(documentId, "runs");
+
       return { ...present({ message, author: invoker }), run };
     }
 
@@ -99,6 +102,8 @@ export const chatService = {
       authorVisitorId: link.visitorId,
       authorName: link.guestName,
     });
+
+    notify(documentId, "chat");
 
     return { ...present({ message, author: null }), run: null };
   },
@@ -113,7 +118,7 @@ export const chatService = {
     const names = findMentions(body);
     if (names.length === 0) return null;
 
-    const agents = await accessRepository.agentsForDocument(documentId);
+    const agents = await accessService.agentsForDocument(documentId);
 
     for (const name of names) {
       const agent = agents.find((row) => firstName(row.displayName) === name);

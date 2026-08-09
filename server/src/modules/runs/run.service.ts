@@ -2,6 +2,7 @@ import { db } from "@/db/client.ts";
 import type { Document, User } from "@/db/types.ts";
 import { accessService } from "@/modules/access/access.service.ts";
 import { chatRepository } from "@/modules/chat/chat.repository.ts";
+import { notify } from "@/modules/collab/collab.events.ts";
 import { documentRepository } from "@/modules/documents/document.repository.ts";
 import { runRepository } from "@/modules/runs/run.repository.ts";
 import type {
@@ -59,10 +60,14 @@ export const runService = {
       await accessService.requireDocumentRole(user, documentId, "editor");
     }
 
-    return runRepository.finish(run.id, {
+    const cancelled = await runRepository.finish(run.id, {
       status: "cancelled",
       summary: "Stopped before it finished.",
     });
+
+    notify(documentId, "runs");
+
+    return cancelled;
   },
 
   async decide(

@@ -6,6 +6,7 @@ import { users } from "@/db/schema/index.ts";
 import type { AgentRun, User } from "@/db/types.ts";
 import { chatRepository } from "@/modules/chat/chat.repository.ts";
 import { agentPresence } from "@/modules/collab/collab.agent-presence.ts";
+import { notify } from "@/modules/collab/collab.events.ts";
 import {
   adapterFor,
   baseUrlFor,
@@ -207,6 +208,8 @@ async function say(
     authorId: agent.id,
     runId: run.id,
   });
+
+  notify(run.documentId, "chat");
 }
 
 async function settle(
@@ -222,6 +225,8 @@ async function settle(
     summary: outcome.status === "succeeded" ? outcome.message : null,
     error: outcome.status === "failed" ? outcome.message : null,
   });
+
+  notify(run.documentId, "runs");
 }
 
 let timer: ReturnType<typeof setInterval> | null = null;
@@ -236,7 +241,10 @@ export function startRunWorker() {
 
     try {
       const run = await runRepository.claimNext();
-      if (run) await execute(run);
+      if (run) {
+        notify(run.documentId, "runs");
+        await execute(run);
+      }
     } catch (error) {
       if (!isProd) console.error("[worker]", error);
     } finally {
