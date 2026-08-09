@@ -79,6 +79,17 @@ async function execute(run: AgentRun) {
 
   await agentPresence.join(run.documentId, agent, invoker);
 
+  // Answer before working: a request that sits silently for thirty seconds
+  // reads as ignored, whoever is watching.
+  await say(
+    run,
+    agent,
+    invoker,
+    atLeast(run.ceiling, "editor")
+      ? "On it — I'll make the change and tell you when it's done."
+      : "On it — I can only read here, so I'll reply with what I find."
+  );
+
   try {
     for (let step = 0; step < MAX_STEPS; step += 1) {
       if (Date.now() > deadline) {
@@ -184,18 +195,27 @@ function explain(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong.";
 }
 
+async function say(
+  run: AgentRun,
+  agent: User,
+  invoker: User,
+  message: string
+) {
+  await chatRepository.create({
+    documentId: run.documentId,
+    body: `@${handleOf(invoker.displayName)} ${message}`,
+    authorId: agent.id,
+    runId: run.id,
+  });
+}
+
 async function settle(
   run: AgentRun,
   agent: User,
   invoker: User,
   outcome: { status: "succeeded" | "failed"; message: string }
 ) {
-  await chatRepository.create({
-    documentId: run.documentId,
-    body: `@${handleOf(invoker.displayName)} ${outcome.message}`,
-    authorId: agent.id,
-    runId: run.id,
-  });
+  await say(run, agent, invoker, outcome.message);
 
   await runRepository.finish(run.id, {
     status: outcome.status,
