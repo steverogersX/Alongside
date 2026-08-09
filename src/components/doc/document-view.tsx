@@ -4,6 +4,7 @@ import { useCallback } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { DocEditor } from "@/components/doc/doc-editor";
+import { DocumentSkeleton } from "@/components/skeletons";
 import { useDocument, useSaveDocument } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
@@ -26,9 +27,7 @@ export function DocumentView({ documentId }: { documentId: string }) {
   const role = document.data?.role;
   const canEdit = role === "editor" || role === "admin";
 
-  if (document.isPending) {
-    return <p className="text-[13px] text-muted-foreground">Loading…</p>;
-  }
+  if (document.isPending) return <DocumentSkeleton />;
 
   if (!doc) {
     return (

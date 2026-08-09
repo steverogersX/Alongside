@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { FeedSkeleton } from "@/components/skeletons";
 import {
   useCreateLink,
   useDocumentLinks,
@@ -156,7 +157,7 @@ export function ShareDialog({
           </span>
 
           {links.isPending ? (
-            <p className="py-2 text-[12.5px] text-muted-foreground">Loading…</p>
+            <FeedSkeleton rows={2} />
           ) : list.length === 0 ? (
             <p className="py-2 text-[12.5px] text-muted-foreground">
               No links yet. This document is visible to workspace members only.

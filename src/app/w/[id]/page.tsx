@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Shell, ShellHeader, ShellRail } from "@/components/shell";
 import { MemberStack } from "@/components/home/member-stack";
 import { WorkspaceMark } from "@/components/home/workspace-mark";
+import { RowsSkeleton, WorkspaceHeaderSkeleton } from "@/components/skeletons";
 import { personAvatar } from "@/lib/avatars";
 import { useCreateDocument, useWorkspace } from "@/lib/queries";
 import { cn } from "@/lib/utils";
@@ -62,7 +63,15 @@ export default function WorkspacePage({
       <main className="px-6 pt-6 pb-12">
         <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
           {workspace.isPending ? (
-            <p className="text-[13px] text-muted-foreground">Loading…</p>
+            <>
+              <WorkspaceHeaderSkeleton />
+              <div>
+                <div className="flex items-center justify-between border-b border-border pb-2.5">
+                  <h2 className="eyebrow">Documents</h2>
+                </div>
+                <RowsSkeleton rows={3} />
+              </div>
+            </>
           ) : !detail ? (
             <p className="text-[13px] text-muted-foreground">
               That workspace is not available.
