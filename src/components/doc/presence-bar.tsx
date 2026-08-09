@@ -35,7 +35,7 @@ export function PresenceBar({
                     "grid size-7 place-items-center overflow-hidden ring-2",
                     ringClass,
                     viewer.kind === "agent"
-                      ? "rounded-lg bg-agent-muted"
+                      ? "rounded-lg bg-secondary"
                       : "rounded-full bg-secondary",
                     viewer.kind === "guest" &&
                       "bg-muted outline-1 -outline-offset-1 outline-dashed outline-border"
@@ -53,6 +53,16 @@ export function PresenceBar({
                     className="size-full select-none"
                   />
                 </span>
+
+                {viewer.kind === "agent" && (
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "animate-agent-pulse absolute -right-0.5 -bottom-0.5 size-2 rounded-full bg-agent ring-2",
+                      ringClass
+                    )}
+                  />
+                )}
               </span>
             </TooltipTrigger>
 
@@ -62,7 +72,11 @@ export function PresenceBar({
                   {viewer.isYou ? "You" : viewer.name}
                 </span>
                 <span className="text-background/70">
-                  {viewer.kind === "guest" ? "Guest · here now" : "Here now"}
+                  {viewer.kind === "agent" && viewer.forName
+                    ? `Working for ${viewer.forName}`
+                    : viewer.kind === "guest"
+                      ? "Guest · here now"
+                      : "Here now"}
                 </span>
               </span>
             </TooltipContent>
@@ -89,6 +103,9 @@ export function PresenceBar({
 }
 
 function summary(viewers: AwarenessViewer[]) {
+  const agent = viewers.find((viewer) => viewer.kind === "agent");
+  if (agent) return `${agent.name} is working`;
+
   const others = viewers.filter((viewer) => !viewer.isYou).length;
   if (others === 0) return "Only you";
   return `You and ${others} ${others === 1 ? "other" : "others"}`;

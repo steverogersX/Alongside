@@ -21,6 +21,7 @@ export type AwarenessUser = {
   avatarSeed: string;
   color: string;
   kind: CollabIdentity["kind"];
+  forName?: string;
 };
 
 const HTTP_BASE =
