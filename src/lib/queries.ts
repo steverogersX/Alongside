@@ -8,6 +8,7 @@ import {
 
 import { api, apiPost } from "@/lib/api";
 import type { SessionUser } from "@/lib/auth";
+import { currentActivity, type Viewer } from "@/lib/presence";
 import type {
   AgentRun,
   ChatMessage,
@@ -30,6 +31,7 @@ export const keys = {
   runs: (id: string) => ["runs", id] as const,
   links: (id: string) => ["links", id] as const,
   linkSession: ["link-session"] as const,
+  presence: (id: string) => ["presence", id] as const,
 };
 
 export function useSession() {
@@ -233,5 +235,22 @@ export function useRevokeLink(documentId: string) {
       }),
     onSuccess: () =>
       client.invalidateQueries({ queryKey: keys.links(documentId) }),
+  });
+}
+
+const PRESENCE_INTERVAL_MS = 10_000;
+
+export function usePresence(documentId: string, enabled = true) {
+  return useQuery({
+    queryKey: keys.presence(documentId),
+    queryFn: () =>
+      apiPost<{ viewers: Viewer[] }>(`/documents/${documentId}/presence`, {
+        activity: currentActivity(),
+      }),
+    enabled: enabled && Boolean(documentId),
+    refetchInterval: PRESENCE_INTERVAL_MS,
+    refetchIntervalInBackground: false,
+    staleTime: 0,
+    retry: false,
   });
 }

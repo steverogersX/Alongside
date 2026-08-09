@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ClaimedParagraph } from "@/components/doc/claimed-paragraph";
+import { reportTyping } from "@/lib/presence";
 import { cn } from "@/lib/utils";
 
 const AUTOSAVE_MS = 1200;
@@ -70,6 +71,7 @@ export function DocEditor({
     if (!editor) return;
 
     const handler = () => {
+      reportTyping();
       releaseClaims();
       setDirty(true);
 
