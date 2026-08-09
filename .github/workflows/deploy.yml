@@ -67,7 +67,15 @@ jobs:
         run: npm install -g @zerops/zcli
 
       - name: Log in
-        run: zcli login "$ZEROPS_TOKEN"
+        # A secret pasted with a trailing newline makes an illegal header value,
+        # and the failure names the URL rather than the cause.
+        run: |
+          token="$(printf '%s' "$ZEROPS_TOKEN" | tr -d '[:space:]')"
+          if [ -z "$token" ]; then
+            echo "ZEROPS_TOKEN is empty — add it under Settings → Secrets"
+            exit 1
+          fi
+          zcli login "$token"
         env:
           ZEROPS_TOKEN: ${{ secrets.ZEROPS_TOKEN }}
 
