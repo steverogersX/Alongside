@@ -3,6 +3,8 @@ import type { Duplex } from "node:stream";
 import {
   Hocuspocus,
   type onConnectPayload,
+  type onLoadDocumentPayload,
+  type onStoreDocumentPayload,
 } from "@hocuspocus/server";
 import { WebSocketServer } from "ws";
 
@@ -11,6 +13,7 @@ import {
   identifyConnection,
   type CollabIdentity,
 } from "@/modules/collab/collab.identity.ts";
+import { collabPersistence } from "@/modules/collab/collab.persistence.ts";
 import { atLeast } from "@/shared/role.ts";
 
 export const COLLAB_PATH = "/collab";
@@ -21,12 +24,23 @@ const UUID =
 type ConnectionContext = { identity: CollabIdentity; documentId: string };
 
 /**
- * In-memory only for now: no onLoadDocument, no onStoreDocument. Rooms live as
- * long as someone is connected, and nothing is written to Postgres.
+ * The Yjs state is the source of truth and is written back debounced, so an
+ * agent can edit a document nobody currently has open and the change survives.
  */
 export const hocuspocus = new Hocuspocus({
   name: "alongside",
   quiet: isProd,
+  debounce: 2000,
+  maxDebounce: 10_000,
+
+  async onLoadDocument({ documentName, document }: onLoadDocumentPayload) {
+    await collabPersistence.load(documentName, document);
+    return document;
+  },
+
+  async onStoreDocument({ documentName, document }: onStoreDocumentPayload) {
+    await collabPersistence.store(documentName, document);
+  },
 
   async onConnect({
     context,

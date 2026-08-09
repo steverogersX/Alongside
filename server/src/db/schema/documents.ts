@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  customType,
   index,
   jsonb,
   pgTable,
@@ -7,6 +8,10 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
+
+const bytea = customType<{ data: Buffer }>({
+  dataType: () => "bytea",
+});
 
 import { docStatus } from "@/db/schema/enums.ts";
 import { users } from "@/db/schema/users.ts";
@@ -24,6 +29,7 @@ export const documents = pgTable(
     content: jsonb("content")
       .notNull()
       .default(sql`'{"type":"doc","content":[]}'::jsonb`),
+    state: bytea("state"),
     createdBy: uuid("created_by")
       .notNull()
       .references(() => users.id),
