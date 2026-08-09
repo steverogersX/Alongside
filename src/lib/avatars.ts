@@ -1,5 +1,5 @@
 import { createAvatar } from "@dicebear/core";
-import { bottts, notionists } from "@dicebear/collection";
+import { botttsNeutral, notionists } from "@dicebear/collection";
 
 const cache = new Map<string, string>();
 
@@ -14,10 +14,10 @@ function memo(key: string, make: () => string) {
 
 export function agentMascot(seed: string, size = 48) {
   return memo(`ag:${seed}:${size}`, () =>
-    createAvatar(bottts, {
+    createAvatar(botttsNeutral, {
       seed,
       size,
-      radius: 25,
+      scale: 80,
       backgroundColor: ["transparent"],
     }).toDataUri()
   );
@@ -28,9 +28,8 @@ export function humanAvatar(seed: string, size = 48) {
     createAvatar(notionists, {
       seed,
       size,
-      radius: 50,
-      scale: 130,
-      translateY: 6,
+      scale: 150,
+      translateY: 8,
       backgroundColor: ["transparent"],
     }).toDataUri()
   );

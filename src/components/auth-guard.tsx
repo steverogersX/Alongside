@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
+import { BrandPulse } from "@/components/skeletons";
 import { useSession } from "@/lib/queries";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -13,13 +14,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     if (isError) router.replace("/login");
   }, [isError, router]);
 
-  if (isPending) {
-    return (
-      <div className="flex h-svh items-center justify-center">
-        <span className="animate-agent-pulse size-2 rounded-full bg-agent" />
-      </div>
-    );
-  }
+  if (isPending) return <BrandPulse label="Signing you in" />;
 
   if (!data) return null;
 

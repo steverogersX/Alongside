@@ -3,6 +3,7 @@ import { Router } from "express";
 import { agentRoutes } from "@/modules/agents/agent.routes.ts";
 import { authRoutes } from "@/modules/auth/auth.routes.ts";
 import { documentRoutes } from "@/modules/documents/document.routes.ts";
+import { linkRoutes } from "@/modules/links/link.routes.ts";
 import { workspaceRoutes } from "@/modules/workspaces/workspace.routes.ts";
 import { ok } from "@/shared/response.ts";
 
@@ -16,3 +17,4 @@ apiRoutes.use("/auth", authRoutes);
 apiRoutes.use("/workspaces", workspaceRoutes);
 apiRoutes.use("/documents", documentRoutes);
 apiRoutes.use("/agents", agentRoutes);
+apiRoutes.use("/links", linkRoutes);

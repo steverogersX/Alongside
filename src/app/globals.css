@@ -221,10 +221,17 @@
 }
 
 .doc-prose {
-  font-family: var(--font-newsreader), ui-serif, Georgia, serif;
-  font-size: 15.5px;
-  line-height: 1.75;
+  font-family: var(--doc-font, var(--font-source-serif)), ui-serif, Georgia,
+    serif;
+  font-size: 17px;
+  line-height: 1.7;
+  letter-spacing: -0.003em;
   color: var(--foreground);
+  font-feature-settings: "liga", "kern";
+}
+
+.doc-prose [style*="font-family"] {
+  letter-spacing: normal;
 }
 
 .doc-prose > * + * {
@@ -232,9 +239,10 @@
 }
 
 .doc-prose h2 {
-  font-size: 17px;
+  font-size: 1.2em;
   font-weight: 600;
-  margin-top: 1.6em;
+  letter-spacing: -0.01em;
+  margin-top: 1.7em;
 }
 
 .doc-prose p[data-claim] {
@@ -300,4 +308,91 @@
 
 .doc-prose ::selection {
   background-color: color-mix(in oklch, var(--agent) 22%, transparent);
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--muted);
+  border-radius: var(--radius-md);
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklch, var(--foreground) 7%, transparent),
+    transparent
+  );
+  animation: skeleton-sweep 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-sweep {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes skeleton-fade {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+  }
+  .skeleton {
+    animation: skeleton-fade 2s ease-in-out infinite;
+  }
+}
+
+/* Remote carets from the collaboration extension. The name only appears while
+   the other person is actually moving, so a room of five is not a wall of tags. */
+.collaboration-carets__caret {
+  position: relative;
+  margin-left: -1px;
+  margin-right: -1px;
+  border-left: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+  word-break: normal;
+  pointer-events: none;
+}
+
+.collaboration-carets__label {
+  position: absolute;
+  top: -1.35em;
+  left: -1px;
+  border-radius: 4px 4px 4px 0;
+  padding: 0.1rem 0.35rem;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  color: #fff;
+  white-space: nowrap;
+  user-select: none;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.collaboration-carets__caret:hover .collaboration-carets__label,
+.doc-prose:focus-within .collaboration-carets__label,
+.collaboration-carets__caret.is-active .collaboration-carets__label {
+  opacity: 1;
+}
+
+.doc-prose .collaboration-carets__label {
+  opacity: 1;
 }

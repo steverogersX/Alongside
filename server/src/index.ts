@@ -1,12 +1,15 @@
 import { createApp } from "@/app.ts";
 import { env } from "@/config/env.ts";
 import { pool } from "@/db/client.ts";
+import { mountCollabServer } from "@/modules/collab/collab.server.ts";
 
 const app = createApp();
 
 const server = app.listen(env.PORT, () => {
   console.log(`api listening on http://localhost:${env.PORT}`);
 });
+
+mountCollabServer(server);
 
 function shutdown(signal: string) {
   console.log(`${signal} received, closing`);

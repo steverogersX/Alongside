@@ -8,6 +8,7 @@ import { Clock } from "@/components/home/clock";
 import { CreateWorkspaceDialog } from "@/components/home/create-workspace-dialog";
 import { EmptyWorkspaces } from "@/components/home/empty-workspaces";
 import { WorkspaceRow } from "@/components/home/workspace-row";
+import { RowsSkeleton } from "@/components/skeletons";
 import { useSession, useWorkspaces } from "@/lib/queries";
 
 export default function Page() {
@@ -58,9 +59,7 @@ export default function Page() {
               </div>
 
               {workspaces.isPending ? (
-                <p className="py-6 text-[13px] text-muted-foreground">
-                  Loading…
-                </p>
+                <RowsSkeleton rows={4} />
               ) : (
                 <div className="divide-y divide-border/60">
                   {list.map((workspace) => (

@@ -1,6 +1,7 @@
 import type {
   agentRuns,
   chatMessages,
+  documentLinks,
   documents,
   grants,
   orgs,
@@ -17,6 +18,7 @@ export type Session = typeof sessions.$inferSelect;
 export type Workspace = typeof workspaces.$inferSelect;
 export type Document = typeof documents.$inferSelect;
 export type Grant = typeof grants.$inferSelect;
+export type DocumentLink = typeof documentLinks.$inferSelect;
 export type AgentRun = typeof agentRuns.$inferSelect;
 export type ChatMessage = typeof chatMessages.$inferSelect;
 

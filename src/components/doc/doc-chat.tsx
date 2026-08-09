@@ -5,6 +5,7 @@ import { ArrowUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ChatSkeleton } from "@/components/skeletons";
 import { personAvatar } from "@/lib/avatars";
 import { useChat, useSendMessage, useSession } from "@/lib/queries";
 import { cn } from "@/lib/utils";
@@ -25,11 +26,9 @@ export function DocChat({ documentId }: { documentId: string }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto px-4">
-        <ol className="flex flex-col gap-3.5 py-3">
-          {chat.isPending && (
-            <li className="text-[12px] text-muted-foreground">Loading…</li>
-          )}
+        {chat.isPending && <ChatSkeleton />}
 
+        <ol className="flex flex-col gap-3.5 py-3">
           {!chat.isPending && messages.length === 0 && (
             <li className="text-[12px] text-muted-foreground">
               No messages yet. Everyone in this doc sees this thread.

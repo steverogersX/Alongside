@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
-import { Inter, IBM_Plex_Mono, Newsreader } from "next/font/google";
+import {
+  IBM_Plex_Mono,
+  Inter,
+  Lora,
+  Newsreader,
+  Source_Serif_4,
+} from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/lib/providers";
 
@@ -11,6 +17,18 @@ const inter = Inter({
 
 const newsreader = Newsreader({
   variable: "--font-newsreader",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const sourceSerif = Source_Serif_4({
+  variable: "--font-source-serif",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const lora = Lora({
+  variable: "--font-lora",
   subsets: ["latin"],
   display: "swap",
 });
@@ -33,7 +51,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${inter.variable} ${newsreader.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${newsreader.variable} ${sourceSerif.variable} ${lora.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="h-full overflow-hidden" suppressHydrationWarning>
         <Providers>{children}</Providers>

@@ -5,6 +5,7 @@ import { Check } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { DocChat } from "@/components/doc/doc-chat";
+import { FeedSkeleton } from "@/components/skeletons";
 import { useRuns } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
@@ -50,7 +51,7 @@ function RunFeed({ documentId }: { documentId: string }) {
       <h2 className="eyebrow pb-3">Agent runs</h2>
 
       {runs.isPending ? (
-        <p className="text-[12px] text-muted-foreground">Loading…</p>
+        <FeedSkeleton />
       ) : list.length === 0 ? (
         <p className="text-[12px] text-muted-foreground">
           No agent has been asked to do anything here yet.
