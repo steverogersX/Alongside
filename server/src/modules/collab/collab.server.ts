@@ -24,7 +24,7 @@ type ConnectionContext = { identity: CollabIdentity; documentId: string };
  * In-memory only for now: no onLoadDocument, no onStoreDocument. Rooms live as
  * long as someone is connected, and nothing is written to Postgres.
  */
-const hocuspocus = new Hocuspocus({
+export const hocuspocus = new Hocuspocus({
   name: "alongside",
   quiet: isProd,
 
