@@ -40,6 +40,7 @@
   --color-agent-foreground: var(--agent-foreground);
   --color-agent-muted: var(--agent-muted);
   --color-online: var(--online);
+  --color-review: var(--review);
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -113,6 +114,7 @@
   --agent-foreground: oklch(0.985 0.002 90);
   --agent-muted: oklch(0.955 0.025 290);
   --online: oklch(0.68 0.16 155);
+  --review: oklch(0.72 0.14 72);
 
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: var(--foreground);
@@ -148,6 +150,7 @@
   --agent-foreground: oklch(0.17 0.01 285);
   --agent-muted: oklch(0.29 0.055 290);
   --online: oklch(0.74 0.14 158);
+  --review: oklch(0.79 0.13 76);
 
   --sidebar: oklch(0.198 0.005 280);
   --sidebar-foreground: var(--foreground);
