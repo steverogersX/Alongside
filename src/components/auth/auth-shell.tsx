@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { Logo } from "@/components/logo";
+
 export function AuthShell({
   title,
   subtitle,
@@ -17,9 +19,7 @@ export function AuthShell({
       <div className="w-full max-w-[26rem]">
         <div className="rounded-2xl border border-sidebar-border bg-sidebar p-7 shadow-sm">
           <Link href="/" className="inline-flex items-center gap-2">
-            <span className="grid size-6 place-items-center rounded-md bg-foreground text-[11px] font-semibold text-background">
-              A
-            </span>
+            <Logo />
             <span className="text-[13px] font-medium">Alongside</span>
           </Link>
 

@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CreateWorkspaceDialog } from "@/components/home/create-workspace-dialog";
 import { WorkspaceMark } from "@/components/home/workspace-mark";
@@ -47,9 +48,7 @@ export function Sidebar({
         variant="ghost"
         className="h-auto justify-start gap-2 rounded-none px-3 py-3 font-normal"
       >
-        <span className="grid size-6 shrink-0 place-items-center rounded-md bg-foreground text-[11px] font-semibold text-background">
-          A
-        </span>
+        <Logo />
         <span className="min-w-0 flex-1 text-left">
           <span className="block truncate text-[13px] font-medium">
             Alongside
