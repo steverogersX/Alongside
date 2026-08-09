@@ -5,21 +5,70 @@ import { useState } from "react";
 import { ChatEmpty } from "@/components/doc/chat-empty";
 import { ChatView, type ChatEntry } from "@/components/doc/chat-view";
 import type { ChatReaction } from "@/components/doc/message-reactions";
-import { useChat, useChatAccess, useSendMessage } from "@/lib/queries";
+import type { Mentionable } from "@/components/doc/mention-menu";
+import {
+  useCancelRun,
+  useChat,
+  useChatAccess,
+  useConnections,
+  useDocument,
+  useRuns,
+  useSendMessage,
+  useWorkspace,
+} from "@/lib/queries";
+
+const firstName = (displayName: string) =>
+  displayName.trim().split(/\s+/)[0]!.toLowerCase();
 
 export function DocChat({ documentId }: { documentId: string }) {
   const [reactions, setReactions] = useState<Record<string, ChatReaction[]>>(
     {}
   );
+
   const access = useChatAccess(documentId);
-  const chat = useChat(
-    documentId,
-    access.data !== undefined && access.data.chat !== "none"
-  );
-  const send = useSendMessage(documentId);
+  const document = useDocument(documentId);
+  const workspaceId = document.data?.document.workspaceId;
+  const workspace = useWorkspace(workspaceId ?? "");
+  const connections = useConnections();
 
   const level = access.data?.chat ?? "none";
   const viewerId = access.data?.viewerId ?? null;
+
+  const chat = useChat(documentId, access.data !== undefined && level !== "none");
+  const runs = useRuns(documentId);
+  const send = useSendMessage(documentId);
+  const cancel = useCancelRun(documentId);
+
+  const members = workspace.data?.members ?? [];
+
+  const mentionables: Mentionable[] = members
+    .map((row) => ({
+      id: row.user.id,
+      name: firstName(row.user.displayName),
+      displayName: row.user.displayName,
+      avatarSeed: row.user.avatarSeed,
+      kind: row.user.kind === "bot" ? ("agent" as const) : ("human" as const),
+      model: row.user.model,
+      disabledReason:
+        row.user.kind === "bot" && row.role === "viewer"
+          ? "Read-only in this workspace"
+          : undefined,
+    }))
+    .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "agent" ? -1 : 1));
+
+  const nameFor = (userId: string) =>
+    members.find((row) => row.user.id === userId)?.user.displayName ?? "someone";
+
+  const seedFor = (userId: string) =>
+    members.find((row) => row.user.id === userId)?.user.avatarSeed ?? userId;
+
+  const modelFor = (userId: string) =>
+    members.find((row) => row.user.id === userId)?.user.model ?? null;
+
+  const waitingOn =
+    connections.data?.connections.find(
+      (connection) => connection.revokedAt === null
+    )?.label ?? null;
 
   const messages: ChatEntry[] = (chat.data?.messages ?? []).map((message) => ({
     id: message.id,
@@ -35,6 +84,49 @@ export function DocChat({ documentId }: { documentId: string }) {
     },
     reactions: reactions[message.id],
   }));
+
+  // A run is shown where its triggering message sits, so the card reads as the
+  // consequence of the mention rather than drifting to the end of the thread.
+  const entries: ChatEntry[] = [];
+
+  for (const message of messages) {
+    entries.push(message);
+
+    for (const run of runs.data?.runs ?? []) {
+      if (run.triggerMessageId !== message.id) continue;
+
+      entries.push({
+        id: `run_${run.id}`,
+        body: "",
+        createdAt: run.createdAt,
+        author: {
+          id: run.agentId,
+          displayName: nameFor(run.agentId),
+          avatarSeed: seedFor(run.agentId),
+          kind: "bot",
+        },
+        run: {
+          id: run.id,
+          status:
+            run.status === "proposed" ||
+            run.status === "accepted" ||
+            run.status === "discarded"
+              ? "running"
+              : run.status,
+          prompt: run.prompt,
+          agentName: nameFor(run.agentId),
+          avatarSeed: seedFor(run.agentId),
+          model: modelFor(run.agentId),
+          invokedBy: nameFor(run.invokedBy),
+          isYours: run.invokedBy === viewerId,
+          waitingOn,
+          startedAt: run.createdAt,
+          summary: run.summary,
+          error: run.error,
+        },
+      });
+    }
+  }
 
   function toggleReaction(messageId: string, emoji: string) {
     setReactions((previous) => {
@@ -81,15 +173,20 @@ export function DocChat({ documentId }: { documentId: string }) {
 
   return (
     <ChatView
-      messages={messages}
+      messages={entries}
       loading={chat.isPending || access.isPending}
       sending={send.isPending}
       disabled={level !== "write"}
       placeholder={
-        level === "write" ? "Message the room…" : "You can read this thread"
+        level === "write"
+          ? "Message the room… use @ to bring in an agent"
+          : "You can read this thread"
       }
+      mentionables={level === "write" ? mentionables : []}
       onSend={(body) => send.mutate(body)}
       onToggleReaction={level === "write" ? toggleReaction : undefined}
+      onStopRun={level === "write" ? (runId) => cancel.mutate(runId) : undefined}
+      stoppingRun={cancel.isPending}
     />
   );
 }
