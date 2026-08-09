@@ -11,6 +11,8 @@ import {
   baseUrlFor,
   type Provider,
 } from "@/modules/providers/index.ts";
+import { ProviderError } from "@/modules/providers/provider.error.ts";
+import { withRetry } from "@/modules/providers/provider.retry.ts";
 import type { Turn } from "@/modules/providers/provider.types.ts";
 import { runRepository } from "@/modules/runs/run.repository.ts";
 import { runTool, toolsFor } from "@/modules/runs/run.tools.ts";
@@ -19,7 +21,7 @@ import { atLeast } from "@/shared/role.ts";
 
 const POLL_MS = 1500;
 const MAX_STEPS = 10;
-const TIMEOUT_MS = 90_000;
+const TIMEOUT_MS = 150_000;
 
 const handleOf = (displayName: string) =>
   displayName.trim().split(/\s+/)[0]!.toLowerCase();
@@ -92,14 +94,27 @@ async function execute(run: AgentRun) {
       const current = await runRepository.find(run.id);
       if (!current || current.status === "cancelled") return;
 
-      const reply = await adapter.send({
-        apiKey: open(agent.keyCipher),
-        baseUrl: baseUrlFor(agent.provider as Provider, agent.baseUrl),
-        model: agent.model,
-        system: systemPrompt(agent, invoker, atLeast(run.ceiling, "editor")),
-        turns,
-        tools,
-      });
+      const reply = await withRetry(
+        () =>
+          adapter.send({
+            apiKey: open(agent.keyCipher!),
+            baseUrl: baseUrlFor(agent.provider as Provider, agent.baseUrl),
+            model: agent.model!,
+            system: systemPrompt(agent, invoker, atLeast(run.ceiling, "editor")),
+            turns,
+            tools,
+          }),
+        {
+          deadline,
+          onWait: ({ attempt, waitMs, status }) => {
+            if (!isProd) {
+              console.log(
+                `[worker] ${status} from provider, retry ${attempt} in ${waitMs}ms`
+              );
+            }
+          },
+        }
+      );
 
       const finish = reply.calls.find((call) => call.name === "finish");
       if (finish) {
@@ -136,13 +151,37 @@ async function execute(run: AgentRun) {
       message: "I went in circles on that one and stopped.",
     });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Something went wrong.";
-
-    await settle(run, agent, invoker, { status: "failed", message });
+    await settle(run, agent, invoker, {
+      status: "failed",
+      message: explain(error),
+    });
   } finally {
     await agentPresence.leave(run.documentId);
   }
+}
+
+function explain(error: unknown) {
+  if (error instanceof ProviderError) {
+    if (error.status === 429) {
+      return "Your provider is rate limiting right now. I waited and tried again a few times — give it a minute and ask me once more.";
+    }
+
+    if (error.status === 401 || error.status === 403) {
+      return "The provider rejected the API key for this agent.";
+    }
+
+    if (error.status >= 500) {
+      return "The provider is having trouble. I retried a few times without luck.";
+    }
+
+    return error.message;
+  }
+
+  if (error instanceof TypeError) {
+    return "I could not reach the provider — check the base URL for this agent.";
+  }
+
+  return error instanceof Error ? error.message : "Something went wrong.";
 }
 
 async function settle(
