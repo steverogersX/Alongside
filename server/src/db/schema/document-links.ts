@@ -9,7 +9,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { documents } from "@/db/schema/documents.ts";
-import { roleName } from "@/db/schema/enums.ts";
+import { chatAccess, roleName } from "@/db/schema/enums.ts";
 import { users } from "@/db/schema/users.ts";
 
 export const documentLinks = pgTable(
@@ -21,6 +21,7 @@ export const documentLinks = pgTable(
       .references(() => documents.id, { onDelete: "cascade" }),
     tokenHash: text("token_hash").notNull().unique(),
     role: roleName("role").notNull().default("viewer"),
+    chatAccess: chatAccess("chat_access").notNull().default("none"),
     label: text("label"),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
