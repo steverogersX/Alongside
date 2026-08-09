@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -12,30 +11,24 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { ApiRequestError } from "@/lib/api";
 import { keys } from "@/lib/queries";
-import { signup, signupSchema } from "@/lib/auth";
+import { login, loginSchema } from "@/lib/auth";
 
-export default function SignupPage() {
-  const router = useRouter();
+export default function LoginPage() {
   const queryClient = useQueryClient();
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const form = useForm({
-    defaultValues: {
-      displayName: "",
-      orgName: "",
-      email: "",
-      password: "",
-    },
-    validators: { onSubmit: signupSchema },
+    defaultValues: { email: "", password: "" },
+    validators: { onSubmit: loginSchema },
     onSubmit: async ({ value }) => {
       setFormError(null);
       setFieldErrors({});
 
       try {
-        const result = await signup(value);
+        const result = await login(value);
         queryClient.setQueryData(keys.session, result);
-        router.push("/");
+        window.location.replace("/");
       } catch (error) {
         if (error instanceof ApiRequestError) {
           setFieldErrors(error.fieldErrors());
@@ -49,13 +42,13 @@ export default function SignupPage() {
 
   return (
     <AuthShell
-      title="Create your workspace"
-      subtitle="One account for you, one room for your team and its agents."
+      title="Sign in"
+      subtitle="Pick up where you and your agents left off."
       footer={
         <>
-          Already have an account?{" "}
-          <Link href="/login" className="text-foreground underline-offset-4 hover:underline">
-            Sign in
+          New here?{" "}
+          <Link href="/signup" className="text-foreground underline-offset-4 hover:underline">
+            Create a workspace
           </Link>
         </>
       }
@@ -69,40 +62,15 @@ export default function SignupPage() {
         }}
         className="flex flex-col gap-4"
       >
-        <form.Field name="displayName">
-          {(field) => (
-            <FormField
-              field={field}
-              label="Your name"
-              placeholder="Pavan"
-              autoComplete="name"
-              autoFocus
-              serverError={fieldErrors.displayName}
-            />
-          )}
-        </form.Field>
-
-        <form.Field name="orgName">
-          {(field) => (
-            <FormField
-              field={field}
-              label="Organisation"
-              placeholder="Acme"
-              hint="You can rename this later."
-              autoComplete="organization"
-              serverError={fieldErrors.orgName}
-            />
-          )}
-        </form.Field>
-
         <form.Field name="email">
           {(field) => (
             <FormField
               field={field}
-              label="Work email"
+              label="Email"
               type="email"
               placeholder="you@acme.com"
               autoComplete="email"
+              autoFocus
               serverError={fieldErrors.email}
             />
           )}
@@ -114,8 +82,7 @@ export default function SignupPage() {
               field={field}
               label="Password"
               type="password"
-              placeholder="At least 10 characters"
-              autoComplete="new-password"
+              autoComplete="current-password"
               serverError={fieldErrors.password}
             />
           )}
@@ -131,7 +98,7 @@ export default function SignupPage() {
           {(isSubmitting) => (
             <Button type="submit" size="lg" disabled={isSubmitting}>
               {isSubmitting && <Spinner />}
-              Create workspace
+              Sign in
             </Button>
           )}
         </form.Subscribe>

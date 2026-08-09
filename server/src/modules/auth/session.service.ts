@@ -1,7 +1,7 @@
 import type { Response } from "express";
 import { and, eq, gt, isNull } from "drizzle-orm";
 
-import { isProd } from "@/config/env.ts";
+import { cookiePolicy } from "@/config/env.ts";
 import { db } from "@/db/client.ts";
 import { sessions, users } from "@/db/schema/index.ts";
 import { SESSION_COOKIE, SESSION_DAYS } from "@/modules/auth/session.constants.ts";
@@ -23,8 +23,8 @@ export const sessionService = {
 
     res.cookie(SESSION_COOKIE, token, {
       httpOnly: true,
-      sameSite: "lax",
-      secure: isProd,
+      sameSite: cookiePolicy.sameSite,
+      secure: cookiePolicy.secure,
       expires: expiresAt,
       path: "/",
     });

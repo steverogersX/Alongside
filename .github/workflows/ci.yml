@@ -1,0 +1,146 @@
+name: ci
+
+on:
+  # A pull request only proves the code is sound — it never touches the
+  # credentials, so a branch cannot deploy by being pushed.
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# A second push while one deploy is mid-flight would race the first; queue them.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install web
+        run: npm ci
+
+      - name: Install api
+        run: npm ci
+        working-directory: server
+
+      # LayoutProps and friends are generated into .next/types, which only
+      # exists after a dev run or a build — typegen produces them on their own.
+      - name: Generate route types
+        run: npx next typegen
+
+      - name: Typecheck web
+        run: npx tsc --noEmit
+
+      - name: Lint web
+        run: npx eslint src --max-warnings=0
+
+      - name: Typecheck api
+        run: npx tsc --noEmit
+        working-directory: server
+
+      # Last, because it is the slowest and the cheap checks above catch most
+      # of what it would. A build still finds what neither can: a route that
+      # cannot be rendered, or an import that only resolves in dev.
+      - name: Build api
+        run: npm run build
+        working-directory: server
+
+      - name: Build web
+        run: npm run build
+
+  deploy:
+    needs: check
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    strategy:
+      # Both services build from the same commit and are independent, so a
+      # failure in one should not cancel the other mid-deploy.
+      fail-fast: false
+      matrix:
+        include:
+          - setup: api
+            serviceId: ${{ vars.ZEROPS_API_SERVICE_ID }}
+          - setup: web
+            serviceId: ${{ vars.ZEROPS_WEB_SERVICE_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install zcli
+        run: npm install -g @zerops/zcli
+
+      - name: Log in
+        # A secret pasted with a trailing newline makes an illegal header value,
+        # and the failure names the URL rather than the cause.
+        run: |
+          token="$(printf '%s' "$ZEROPS_TOKEN" | tr -d '[:space:]')"
+          if [ -z "$token" ]; then
+            echo "ZEROPS_TOKEN is empty — add it under Settings → Secrets"
+            exit 1
+          fi
+          zcli login "$token"
+        env:
+          ZEROPS_TOKEN: ${{ secrets.ZEROPS_TOKEN }}
+
+      # zcli falls back to an interactive picker when it does not know where
+      # to deploy, which in CI surfaces as "allowed only in interactive
+      # terminal" rather than as a missing setting.
+      - name: Check deploy target
+        run: |
+          missing=""
+          [ -n "$PROJECT_ID" ] || missing="$missing ZEROPS_PROJECT_ID"
+          [ -n "$SERVICE_ID" ] || missing="$missing service-id-for-${SETUP}"
+          if [ -n "$missing" ]; then
+            echo "Missing repository variables:$missing"
+            echo "Settings -> Secrets and variables -> Actions -> Variables"
+            exit 1
+          fi
+        env:
+          PROJECT_ID: ${{ vars.ZEROPS_PROJECT_ID }}
+          SERVICE_ID: ${{ matrix.serviceId }}
+          SETUP: ${{ matrix.setup }}
+
+      - name: Push ${{ matrix.setup }}
+        run: |
+          zcli push             --projectId "$PROJECT_ID"             --setup "${{ matrix.setup }}"             --serviceId "$SERVICE_ID"
+        env:
+          PROJECT_ID: ${{ vars.ZEROPS_PROJECT_ID }}
+          SERVICE_ID: ${{ matrix.serviceId }}
+
+  smoke:
+    needs: deploy
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: API is serving
+        run: |
+          for i in 1 2 3 4 5; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/api/health")
+            echo "attempt $i -> $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 10
+          done
+          echo "API did not come back healthy"
+          exit 1
+        env:
+          API_URL: ${{ vars.ZEROPS_API_URL }}
+
+      - name: Web is serving
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" "$WEB_URL")
+          echo "web -> $code"
+          [ "$code" = "200" ]
+        env:
+          WEB_URL: ${{ vars.ZEROPS_WEB_URL }}

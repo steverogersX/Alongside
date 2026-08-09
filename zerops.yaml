@@ -8,7 +8,6 @@ zerops:
       deployFiles:
         - server/dist
         - server/drizzle
-        - server/drizzle.config.ts
         - server/package.json
         - server/node_modules
       cache:
@@ -18,7 +17,7 @@ zerops:
         httpGet:
           port: 4000
           path: /api/health
-        failureTimeout: 90
+        failureTimeout: 90s
     run:
       base: nodejs@22
       ports:
@@ -27,21 +26,23 @@ zerops:
       # Migrations run before the process starts, so a deploy that changes the
       # schema can never serve traffic against the old one.
       initCommands:
-        - cd server && npx drizzle-kit migrate
+        - node server/dist/db/migrate.js
       start: node server/dist/index.js
       healthCheck:
         httpGet:
           port: 4000
           path: /api/health
-        execPeriod: 30
+        execPeriod: 30s
       envVariables:
         NODE_ENV: production
         PORT: 4000
         DATABASE_URL: ${db_connectionString}
-        SESSION_SECRET: ${SESSION_SECRET}
-        CREDENTIALS_KEY: ${CREDENTIALS_KEY}
-        API_ORIGIN: ${zeropsSubdomain}
-        CORS_ORIGIN: ${web_zeropsSubdomain}
+        # Cross-service references such as ${web_zeropsSubdomain} arrive here as
+        # literal text rather than a URL, so these are spelled out. They are
+        # public addresses, not secrets — unlike SESSION_SECRET and
+        # CREDENTIALS_KEY, which live on the service and must not be named here.
+        API_ORIGIN: https://api-2b3f-4000.prg1.zerops.app
+        CORS_ORIGIN: https://web-2b3f-3000.prg1.zerops.app
 
   - setup: web
     build:
@@ -60,14 +61,15 @@ zerops:
         - .next/cache
       envVariables:
         # Next inlines NEXT_PUBLIC_* at build time, so this has to be set here
-        # rather than at run time.
-        NEXT_PUBLIC_API_URL: ${api_zeropsSubdomain}/api
+        # rather than at run time — and spelled out, since the cross-service
+        # reference is not substituted.
+        NEXT_PUBLIC_API_URL: https://api-2b3f-4000.prg1.zerops.app/api
     deploy:
       readinessCheck:
         httpGet:
           port: 3000
           path: /
-        failureTimeout: 90
+        failureTimeout: 90s
     run:
       base: nodejs@22
       ports:

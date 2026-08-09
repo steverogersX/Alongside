@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import type { Response } from "express";
 import { SignJWT, jwtVerify } from "jose";
 
-import { env, isProd } from "@/config/env.ts";
+import { cookiePolicy, env } from "@/config/env.ts";
 import type { Role } from "@/db/types.ts";
 import {
   LINK_COOKIE,
@@ -44,8 +44,8 @@ export const linkToken = {
 
     res.cookie(LINK_COOKIE, jwt, {
       httpOnly: true,
-      sameSite: "lax",
-      secure: isProd,
+      sameSite: cookiePolicy.sameSite,
+      secure: cookiePolicy.secure,
       expires: expiresAt,
       path: "/",
     });
