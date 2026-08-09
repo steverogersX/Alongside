@@ -10,6 +10,7 @@ import { api, apiPost } from "@/lib/api";
 import type { SessionUser } from "@/lib/auth";
 import type {
   AgentRun,
+  ChatAccess,
   ChatMessage,
   DocumentLink,
   DocumentSummary,
@@ -27,6 +28,7 @@ export const keys = {
   agents: ["agents"] as const,
   document: (id: string) => ["document", id] as const,
   chat: (id: string) => ["chat", id] as const,
+  chatAccess: (id: string) => ["chat-access", id] as const,
   runs: (id: string) => ["runs", id] as const,
   links: (id: string) => ["links", id] as const,
   linkSession: ["link-session"] as const,
@@ -75,6 +77,18 @@ export function useChat(documentId: string) {
     queryFn: () =>
       api<{ messages: ChatMessage[] }>(`/documents/${documentId}/chat`),
     enabled: Boolean(documentId),
+  });
+}
+
+export function useChatAccess(documentId: string) {
+  return useQuery({
+    queryKey: keys.chatAccess(documentId),
+    queryFn: () =>
+      api<{ chat: ChatAccess; viewerId: string | null }>(
+        `/documents/${documentId}/chat/access`
+      ),
+    enabled: Boolean(documentId),
+    retry: false,
   });
 }
 
@@ -211,6 +225,7 @@ export function useCreateLink(documentId: string) {
   return useMutation({
     mutationFn: (input: {
       role: "viewer" | "editor";
+      chatAccess: ChatAccess;
       label?: string;
       expiresInDays?: number;
     }) =>
