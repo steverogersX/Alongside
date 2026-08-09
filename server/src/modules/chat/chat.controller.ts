@@ -1,23 +1,30 @@
 import { chatService } from "@/modules/chat/chat.service.ts";
 import { postMessageSchema } from "@/modules/chat/chat.schema.ts";
 import { created, ok } from "@/shared/response.ts";
-import { route } from "@/shared/route.ts";
+import { publicRoute } from "@/shared/route.ts";
 import { idParams, noQuery, paginationQuery } from "@/shared/validation.ts";
 
 export const chatController = {
-  list: route(
+  list: publicRoute(
     { params: idParams, query: paginationQuery },
-    async ({ params, query, user, res }) => {
-      const messages = await chatService.list(user, params.id, query);
+    async ({ params, query, req, res }) => {
+      const messages = await chatService.list(req, params.id, query);
       ok(res, { messages }, { count: messages.length });
     }
   ),
 
-  post: route(
+  post: publicRoute(
     { params: idParams, body: postMessageSchema, query: noQuery },
-    async ({ params, body, user, res }) => {
-      const message = await chatService.post(user, params.id, body);
+    async ({ params, body, req, res }) => {
+      const message = await chatService.post(req, params.id, body);
       created(res, { message });
+    }
+  ),
+
+  access: publicRoute(
+    { params: idParams, query: noQuery },
+    async ({ params, req, res }) => {
+      ok(res, await chatService.access(req, params.id));
     }
   ),
 };

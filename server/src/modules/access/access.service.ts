@@ -1,6 +1,6 @@
 import type { Request } from "express";
 
-import type { Role, User } from "@/db/types.ts";
+import type { ChatAccess, Role, User } from "@/db/types.ts";
 import { accessRepository } from "@/modules/access/access.repository.ts";
 import { forbidden, notFound } from "@/shared/errors.ts";
 import { atLeast, highest, lower } from "@/shared/role.ts";
@@ -28,17 +28,36 @@ export const accessService = {
     );
   },
 
+  /**
+   * Chat is a separate axis from editing: a reviewer who cannot touch the text
+   * is often exactly who you want commenting, and a guest trusted to edit is
+   * not automatically trusted to read the room's back-and-forth.
+   */
   async contextAccess(
     req: Request,
     documentId: string
-  ): Promise<{ role: Role; via: "member" | "link" } | null> {
+  ): Promise<{
+    role: Role;
+    chat: ChatAccess;
+    via: "member" | "link";
+  } | null> {
     if (req.user) {
       const role = await this.documentRole(req.user, documentId);
-      return role ? { role, via: "member" } : null;
+      if (!role) return null;
+
+      return {
+        role,
+        chat: atLeast(role, "editor") ? "write" : "read",
+        via: "member",
+      };
     }
 
     if (req.link && req.link.documentId === documentId) {
-      return { role: req.link.role, via: "link" };
+      return {
+        role: req.link.role,
+        chat: req.link.chatAccess,
+        via: "link",
+      };
     }
 
     return null;

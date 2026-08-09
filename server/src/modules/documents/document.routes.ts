@@ -17,8 +17,9 @@ documentRoutes.get("/:id/identity", presenceController.identity);
 documentRoutes.post("/:id/presence", presenceController.heartbeat);
 documentRoutes.post("/:id/presence/leave", presenceController.leave);
 
-documentRoutes.get("/:id/chat", requireUser, chatController.list);
-documentRoutes.post("/:id/chat", requireUser, chatController.post);
+documentRoutes.get("/:id/chat", chatController.list);
+documentRoutes.get("/:id/chat/access", chatController.access);
+documentRoutes.post("/:id/chat", chatController.post);
 
 documentRoutes.get("/:id/runs", requireUser, runController.list);
 documentRoutes.post("/:id/runs", requireUser, runController.start);
