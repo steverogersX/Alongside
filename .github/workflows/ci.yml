@@ -1,8 +1,12 @@
-name: deploy
+name: ci
 
 on:
+  # A pull request only proves the code is sound — it never touches the
+  # credentials, so a branch cannot deploy by being pushed.
+  pull_request:
+    branches: [main]
   push:
-    branches: [main, master, feat/mcp-agents]
+    branches: [main]
   workflow_dispatch:
 
 # A second push while one deploy is mid-flight would race the first; queue them.
@@ -45,6 +49,7 @@ jobs:
 
   deploy:
     needs: check
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     strategy:
       # Both services build from the same commit and are independent, so a
@@ -106,6 +111,7 @@ jobs:
 
   smoke:
     needs: deploy
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: API is serving
