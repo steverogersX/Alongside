@@ -4,9 +4,9 @@ on:
   # A pull request only proves the code is sound — it never touches the
   # credentials, so a branch cannot deploy by being pushed.
   pull_request:
-    branches: [main]
+    branches: [master, main]
   push:
-    branches: [main]
+    branches: [master, main]
   workflow_dispatch:
 
 # A second push while one deploy is mid-flight would race the first; queue them.
