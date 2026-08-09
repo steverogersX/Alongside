@@ -28,6 +28,11 @@ jobs:
         run: npm ci
         working-directory: server
 
+      # LayoutProps and friends are generated into .next/types, which only
+      # exists after a dev run or a build — typegen produces them on their own.
+      - name: Generate route types
+        run: npx next typegen
+
       - name: Typecheck web
         run: npx tsc --noEmit
 
