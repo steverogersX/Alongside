@@ -13,6 +13,13 @@ export const presenceController = {
     }
   ),
 
+  identity: publicRoute(
+    { params: idParams, query: noQuery },
+    async ({ params, req, res }) => {
+      ok(res, await presenceService.identity(req, params.id));
+    }
+  ),
+
   leave: publicRoute(
     { params: idParams, body: noBody, query: noQuery },
     async ({ params, req, res }) => {

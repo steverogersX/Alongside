@@ -13,6 +13,7 @@ documentRoutes.get("/:id", documentController.get);
 documentRoutes.patch("/:id", documentController.update);
 documentRoutes.get("/:id/role", documentController.role);
 
+documentRoutes.get("/:id/identity", presenceController.identity);
 documentRoutes.post("/:id/presence", presenceController.heartbeat);
 documentRoutes.post("/:id/presence/leave", presenceController.leave);
 

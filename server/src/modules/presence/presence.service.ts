@@ -6,6 +6,7 @@ import {
 } from "unique-names-generator";
 
 import { accessService } from "@/modules/access/access.service.ts";
+import { identityFor } from "@/modules/collab/collab.identity.ts";
 import type { HeartbeatInput } from "@/modules/presence/presence.schema.ts";
 import {
   presenceStore,
@@ -62,6 +63,16 @@ export const presenceService = {
         : "viewing";
 
     return presenceStore.touch(documentId, { ...who, activity });
+  },
+
+  async identity(req: Request, documentId: string) {
+    const access = await accessService.contextAccess(req, documentId);
+    if (!access) throw notFound("Document not found");
+
+    const who = identify(req, documentId);
+    if (!who) throw notFound("Document not found");
+
+    return { ...who, color: identityFor(who.key), role: access.role };
   },
 
   async leave(req: Request, documentId: string) {
