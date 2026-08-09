@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -15,7 +14,6 @@ import { keys } from "@/lib/queries";
 import { signup, signupSchema } from "@/lib/auth";
 
 export default function SignupPage() {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -35,7 +33,7 @@ export default function SignupPage() {
       try {
         const result = await signup(value);
         queryClient.setQueryData(keys.session, result);
-        router.push("/");
+        window.location.replace("/");
       } catch (error) {
         if (error instanceof ApiRequestError) {
           setFieldErrors(error.fieldErrors());

@@ -9,7 +9,6 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthGuard } from "@/components/auth-guard";
 import { Sidebar } from "@/components/home/sidebar";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { cn } from "@/lib/utils";
@@ -53,51 +52,49 @@ export function Shell({
   }, [showRail]);
 
   return (
-    <AuthGuard>
-      <TooltipProvider>
-        <div className="flex h-svh gap-2.5 p-2.5">
-          <Sidebar activeNav={activeNav} activeWorkspaceId={activeWorkspaceId} />
+    <TooltipProvider>
+      <div className="flex h-svh gap-2.5 p-2.5">
+        <Sidebar activeNav={activeNav} activeWorkspaceId={activeWorkspaceId} />
 
-          {showRail ? (
-            <ResizablePanelGroup
-              orientation="horizontal"
-              groupRef={groupRef}
-              onLayoutChanged={(layout) =>
-                window.localStorage.setItem(STORAGE_KEY, JSON.stringify(layout))
-              }
-              className="min-w-0 flex-1"
-            >
-              <ResizablePanel
-                minSize={MAIN_MIN}
-                className={cn("flex min-w-0 flex-col overflow-y-auto", PANEL)}
-              >
-                {children}
-              </ResizablePanel>
-
-              <ResizableHandle withHandle className="mx-0.5" />
-
-              <ResizablePanel
-                defaultSize={RAIL.default}
-                minSize={RAIL.min}
-                maxSize={RAIL.max}
-                className="min-w-0"
-              >
-                {rail}
-              </ResizablePanel>
-            </ResizablePanelGroup>
-          ) : (
-            <div
-              className={cn(
-                "flex min-w-0 flex-1 flex-col overflow-y-auto",
-                PANEL
-              )}
+        {showRail ? (
+          <ResizablePanelGroup
+            orientation="horizontal"
+            groupRef={groupRef}
+            onLayoutChanged={(layout) =>
+              window.localStorage.setItem(STORAGE_KEY, JSON.stringify(layout))
+            }
+            className="min-w-0 flex-1"
+          >
+            <ResizablePanel
+              minSize={MAIN_MIN}
+              className={cn("flex min-w-0 flex-col overflow-y-auto", PANEL)}
             >
               {children}
-            </div>
-          )}
-        </div>
-      </TooltipProvider>
-    </AuthGuard>
+            </ResizablePanel>
+
+            <ResizableHandle withHandle className="mx-0.5" />
+
+            <ResizablePanel
+              defaultSize={RAIL.default}
+              minSize={RAIL.min}
+              maxSize={RAIL.max}
+              className="min-w-0"
+            >
+              {rail}
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        ) : (
+          <div
+            className={cn(
+              "flex min-w-0 flex-1 flex-col overflow-y-auto",
+              PANEL
+            )}
+          >
+            {children}
+          </div>
+        )}
+      </div>
+    </TooltipProvider>
   );
 }
 
