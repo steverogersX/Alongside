@@ -61,20 +61,8 @@ export function AgentRunCard({
           />
         </span>
 
-        <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-1.5">
-            <span className="truncate text-[12.5px] font-semibold text-agent">
-              {run.agentName}
-            </span>
-            {run.model && (
-              <span className="shrink-0 truncate font-mono text-[10px] text-muted-foreground">
-                {run.model}
-              </span>
-            )}
-          </span>
-          <span className="block truncate text-[11px] text-muted-foreground">
-            asked by {run.isYours ? "you" : run.invokedBy}
-          </span>
+        <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-agent">
+          {run.agentName}
         </span>
 
         <StatusPill run={run} />
@@ -82,16 +70,27 @@ export function AgentRunCard({
         {live && canStop && (
           <Button
             variant="ghost"
-            size="xs"
+            size="icon-xs"
+            aria-label="Stop"
+            title="Stop"
             disabled={stopping}
             onClick={() => onStop(run.id)}
             className="shrink-0 text-muted-foreground hover:text-destructive"
           >
             <Square className="fill-current" />
-            Stop
           </Button>
         )}
       </div>
+
+      <p className="mt-1 truncate text-[11px] text-muted-foreground">
+        asked by {run.isYours ? "you" : run.invokedBy}
+        {run.model && (
+          <>
+            {" · "}
+            <span className="font-mono">{run.model}</span>
+          </>
+        )}
+      </p>
 
       <p className="mt-2 border-l-2 border-agent/25 pl-2 text-[12.5px] leading-snug text-foreground/90">
         {run.prompt}
