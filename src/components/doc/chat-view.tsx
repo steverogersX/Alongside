@@ -5,6 +5,11 @@ import { ArrowUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ChatSkeleton } from "@/components/skeletons";
+import {
+  ReactionButton,
+  ReactionChips,
+  type ChatReaction,
+} from "@/components/doc/message-reactions";
 import { personAvatar } from "@/lib/avatars";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +27,7 @@ export type ChatEntry = {
   createdAt: string;
   author: ChatAuthor;
   isYou?: boolean;
+  reactions?: ChatReaction[];
 };
 
 const GROUP_WINDOW_MS = 5 * 60_000;
@@ -39,6 +45,7 @@ export function ChatView({
   disabled = false,
   placeholder = "Message the room…",
   onSend,
+  onToggleReaction,
 }: {
   messages: ChatEntry[];
   loading?: boolean;
@@ -46,9 +53,13 @@ export function ChatView({
   disabled?: boolean;
   placeholder?: string;
   onSend: (body: string) => void;
+  onToggleReaction?: (messageId: string, emoji: string) => void;
 }) {
   const [draft, setDraft] = useState("");
+  const [pickerFor, setPickerFor] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+
+  const canReact = onToggleReaction !== undefined && !disabled;
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
@@ -85,7 +96,7 @@ export function ChatView({
                 <li
                   key={message.id}
                   className={cn(
-                    "flex gap-2",
+                    "group flex gap-2",
                     mine ? "flex-row-reverse" : "flex-row",
                     grouped ? "mt-0.5" : "mt-3 first:mt-0"
                   )}
@@ -157,18 +168,53 @@ export function ChatView({
                       </div>
                     )}
 
-                    <p
+                    <div
                       className={cn(
-                        "px-3 py-1.5 text-[13px] leading-[1.5] break-words whitespace-pre-wrap",
-                        mine
-                          ? "rounded-2xl rounded-br-md bg-primary text-primary-foreground"
-                          : "rounded-2xl rounded-bl-md bg-secondary text-foreground",
-                        isAgent &&
-                          "bg-agent/10 text-foreground ring-1 ring-agent/20"
+                        "flex w-full items-center gap-1",
+                        mine ? "flex-row-reverse" : "flex-row"
                       )}
                     >
-                      {message.body}
-                    </p>
+                      <p
+                        className={cn(
+                          "min-w-0 px-3 py-1.5 text-[13px] leading-[1.5] break-words whitespace-pre-wrap",
+                          mine
+                            ? "rounded-2xl rounded-br-md bg-primary text-primary-foreground"
+                            : "rounded-2xl rounded-bl-md bg-secondary text-foreground",
+                          isAgent &&
+                            "bg-agent/10 text-foreground ring-1 ring-agent/20"
+                        )}
+                      >
+                        {message.body}
+                      </p>
+
+                      {canReact && (
+                        <ReactionButton
+                          open={pickerFor === message.id}
+                          onOpenChange={(open) =>
+                            setPickerFor(open ? message.id : null)
+                          }
+                          side={mine ? "right" : "left"}
+                          onPick={(emoji) =>
+                            onToggleReaction?.(message.id, emoji)
+                          }
+                          className={cn(
+                            "shrink-0 transition-opacity group-hover:opacity-100",
+                            pickerFor === message.id
+                              ? "opacity-100"
+                              : "opacity-0"
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    <ReactionChips
+                      reactions={message.reactions ?? []}
+                      align={mine ? "right" : "left"}
+                      disabled={!canReact}
+                      onToggle={(emoji) =>
+                        onToggleReaction?.(message.id, emoji)
+                      }
+                    />
                   </div>
                 </li>
               );
