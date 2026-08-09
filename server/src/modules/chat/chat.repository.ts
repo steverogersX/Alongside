@@ -8,7 +8,7 @@ export const chatRepository = {
     return db
       .select({ message: chatMessages, author: users })
       .from(chatMessages)
-      .innerJoin(users, eq(users.id, chatMessages.authorId))
+      .leftJoin(users, eq(users.id, chatMessages.authorId))
       .where(eq(chatMessages.documentId, documentId))
       .orderBy(asc(chatMessages.createdAt))
       .limit(limit)
@@ -18,9 +18,12 @@ export const chatRepository = {
   async create(
     input: {
       documentId: string;
-      authorId: string;
       body: string;
       runId?: string | null;
+      authorId?: string | null;
+      authorLinkId?: string | null;
+      authorVisitorId?: string | null;
+      authorName?: string | null;
     },
     tx: Tx | typeof db = db
   ) {
@@ -28,9 +31,12 @@ export const chatRepository = {
       .insert(chatMessages)
       .values({
         documentId: input.documentId,
-        authorId: input.authorId,
         body: input.body,
         runId: input.runId ?? null,
+        authorId: input.authorId ?? null,
+        authorLinkId: input.authorLinkId ?? null,
+        authorVisitorId: input.authorVisitorId ?? null,
+        authorName: input.authorName ?? null,
       })
       .returning();
 

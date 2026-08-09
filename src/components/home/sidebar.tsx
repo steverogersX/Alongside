@@ -16,7 +16,9 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CreateWorkspaceDialog } from "@/components/home/create-workspace-dialog";
 import { WorkspaceMark } from "@/components/home/workspace-mark";
@@ -47,9 +49,7 @@ export function Sidebar({
         variant="ghost"
         className="h-auto justify-start gap-2 rounded-none px-3 py-3 font-normal"
       >
-        <span className="grid size-6 shrink-0 place-items-center rounded-md bg-foreground text-[11px] font-semibold text-background">
-          A
-        </span>
+        <Logo />
         <span className="min-w-0 flex-1 text-left">
           <span className="block truncate text-[13px] font-medium">
             Alongside
@@ -111,9 +111,27 @@ export function Sidebar({
       </div>
 
       <div className="flex flex-col gap-0.5 overflow-y-auto px-2 pb-2">
+        {workspaces.isPending && (
+          <div
+            role="status"
+            aria-label="Loading workspaces"
+            className="flex flex-col gap-2 px-2 py-1.5"
+          >
+            {[0, 1, 2].map((index) => (
+              <div key={index} className="flex items-center gap-2">
+                <Skeleton className="size-4 shrink-0 rounded" />
+                <Skeleton
+                  className="h-2.5 flex-1"
+                  style={{ maxWidth: `${80 - index * 14}%` }}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
         {workspaces.data?.workspaces.length === 0 && (
           <p className="px-2 py-1 text-[12px] text-muted-foreground">
-            None yet
+            No workspaces yet
           </p>
         )}
         {workspaces.data?.workspaces.map((ws) => (

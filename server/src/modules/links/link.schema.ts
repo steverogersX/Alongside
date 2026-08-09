@@ -4,6 +4,7 @@ import { uuidSchema } from "@/shared/validation.ts";
 
 export const createLinkSchema = z.object({
   role: z.enum(["viewer", "editor"]).default("viewer"),
+  chatAccess: z.enum(["none", "read", "write"]).default("none"),
   label: z.string().trim().min(1).max(80).optional(),
   expiresInDays: z.coerce.number().int().min(1).max(365).optional(),
 });

@@ -1,19 +1,15 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
+import { FileX } from "lucide-react";
+
 import { CollabEditor } from "@/components/doc/collab-editor";
+import { DocStatus } from "@/components/doc/doc-status";
+import { EmptyState } from "@/components/empty-state";
 import { PresenceBar } from "@/components/doc/presence-bar";
 import { DocumentSkeleton } from "@/components/skeletons";
 import { useCollabSession } from "@/lib/collab";
 import { useAwareness } from "@/lib/use-awareness";
 import { useDocument } from "@/lib/queries";
-import { cn } from "@/lib/utils";
-
-const STATUS_LABEL: Record<string, string> = {
-  draft: "draft",
-  in_review: "in review",
-  final: "final",
-};
 
 export function DocumentView({ documentId }: { documentId: string }) {
   const document = useDocument(documentId);
@@ -29,10 +25,11 @@ export function DocumentView({ documentId }: { documentId: string }) {
 
   if (!doc) {
     return (
-      <p className="text-[13px] text-muted-foreground">
-        That document is not available. The link may have been revoked or
-        expired.
-      </p>
+      <EmptyState
+        icon={FileX}
+        title="Document not available"
+        body="The link may have been revoked or expired. Ask whoever shared it for a fresh one."
+      />
     );
   }
 
@@ -43,15 +40,7 @@ export function DocumentView({ documentId }: { documentId: string }) {
       </h1>
 
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <Badge
-          variant="ghost"
-          className={cn(
-            "h-4 px-0 text-[11px]",
-            doc.status === "final" ? "text-online" : "text-muted-foreground"
-          )}
-        >
-          {STATUS_LABEL[doc.status]}
-        </Badge>
+        <DocStatus status={doc.status} />
 
         {!canEdit && (
           <span className="text-[12px] text-muted-foreground">Read only</span>

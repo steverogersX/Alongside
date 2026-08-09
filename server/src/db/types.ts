@@ -5,6 +5,7 @@ import type {
   documents,
   grants,
   orgs,
+  chatAccess,
   roleName,
   runStatus,
   sessions,
@@ -23,6 +24,7 @@ export type AgentRun = typeof agentRuns.$inferSelect;
 export type ChatMessage = typeof chatMessages.$inferSelect;
 
 export type Role = (typeof roleName.enumValues)[number];
+export type ChatAccess = (typeof chatAccess.enumValues)[number];
 export type RunStatus = (typeof runStatus.enumValues)[number];
 
 export type PublicUser = Pick<

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Check } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { DocChat } from "@/components/doc/doc-chat";
+import { EmptyState } from "@/components/empty-state";
 import { FeedSkeleton } from "@/components/skeletons";
 import { useRuns } from "@/lib/queries";
 import { cn } from "@/lib/utils";
@@ -53,9 +54,13 @@ function RunFeed({ documentId }: { documentId: string }) {
       {runs.isPending ? (
         <FeedSkeleton />
       ) : list.length === 0 ? (
-        <p className="text-[12px] text-muted-foreground">
-          No agent has been asked to do anything here yet.
-        </p>
+        <EmptyState
+          size="sm"
+          icon={Sparkles}
+          title="No agent runs yet"
+          body="Ask an agent to do something in this document and its work shows up here."
+          className="px-0"
+        />
       ) : (
         <ol className="flex flex-col gap-3">
           {list.map((run) => (

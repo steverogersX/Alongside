@@ -38,14 +38,16 @@ export type WorkspaceDetail = {
   documents: DocumentSummary[];
 };
 
+export type ChatAccess = "none" | "read" | "write";
+
 export type ChatMessage = {
   id: string;
   documentId: string;
-  authorId: string;
+  authorId: string | null;
   body: string;
   runId: string | null;
   createdAt: string;
-  author: Member;
+  author: Member & { isGuest: boolean };
 };
 
 export type AgentRun = {
@@ -67,6 +69,7 @@ export type DocumentLink = {
   id: string;
   documentId: string;
   role: "viewer" | "editor";
+  chatAccess: ChatAccess;
   label: string | null;
   expiresAt: string | null;
   revokedAt: string | null;

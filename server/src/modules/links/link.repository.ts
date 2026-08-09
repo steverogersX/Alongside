@@ -42,6 +42,7 @@ export const linkRepository = {
     documentId: string;
     tokenHash: string;
     role: Role;
+    chatAccess: "none" | "read" | "write";
     label: string | null;
     expiresAt: Date | null;
     createdBy: string;

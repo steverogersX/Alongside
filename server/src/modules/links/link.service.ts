@@ -35,6 +35,7 @@ export const linkService = {
       documentId,
       tokenHash: hashToken(token),
       role: input.role,
+      chatAccess: input.chatAccess,
       label: input.label ?? null,
       expiresAt: input.expiresInDays
         ? new Date(Date.now() + input.expiresInDays * 86_400_000)
@@ -75,6 +76,11 @@ export const linkService = {
     if (!link || !isLive(link)) return null;
     if (link.documentId !== claims.documentId) return null;
 
-    return { link, role: link.role, visitorId: claims.visitorId };
+    return {
+      link,
+      role: link.role,
+      chatAccess: link.chatAccess,
+      visitorId: claims.visitorId,
+    };
   },
 };

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <style>
+    /* A tab strip is not the page, so the mark carries its own palette and
+       follows the browser's scheme rather than the app's theme class. */
+    .ink { fill: #1d1a17 }
+    .agent { fill: #6b55df }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #ecebe9 }
+      .agent { fill: #aa98ff }
+    }
+  </style>
+  <rect class="ink" x="4.5" y="2" width="6" height="16" rx="3" />
+  <rect class="agent" x="13.5" y="6" width="6" height="16" rx="3" />
+</svg>

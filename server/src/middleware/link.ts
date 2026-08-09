@@ -1,8 +1,9 @@
 import type { NextFunction, Request, Response } from "express";
 
-import type { Role } from "@/db/types.ts";
+import type { ChatAccess, Role } from "@/db/types.ts";
 import { LINK_COOKIE } from "@/modules/links/link.constants.ts";
 import { linkService } from "@/modules/links/link.service.ts";
+import { guestNameFor } from "@/modules/collab/collab.identity.ts";
 
 declare global {
   namespace Express {
@@ -11,7 +12,9 @@ declare global {
         linkId: string;
         documentId: string;
         role: Role;
+        chatAccess: ChatAccess;
         visitorId: string;
+        guestName: string;
       };
     }
   }
@@ -31,7 +34,9 @@ export async function attachLink(
         linkId: resolved.link.id,
         documentId: resolved.link.documentId,
         role: resolved.role,
+        chatAccess: resolved.chatAccess,
         visitorId: resolved.visitorId,
+        guestName: guestNameFor(resolved.link.documentId, resolved.visitorId),
       };
     }
   }

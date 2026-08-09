@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Plus } from "lucide-react";
 
+import { Spinner } from "@/components/ui/spinner";
 import { CreateWorkspaceDialog } from "@/components/home/create-workspace-dialog";
 import { WorkspaceMark } from "@/components/home/workspace-mark";
 import { useCreateWorkspace } from "@/lib/queries";
@@ -78,7 +79,8 @@ export function EmptyWorkspaces() {
             </span>
 
             <span className="shrink-0 text-[11.5px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
-              {pending === template.name ? "Creating…" : "Create"}
+              {pending === template.name && <Spinner />}
+              Create
             </span>
             <ChevronRight className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
           </button>

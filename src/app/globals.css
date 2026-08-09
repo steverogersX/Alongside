@@ -40,6 +40,7 @@
   --color-agent-foreground: var(--agent-foreground);
   --color-agent-muted: var(--agent-muted);
   --color-online: var(--online);
+  --color-review: var(--review);
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -107,12 +108,13 @@
   --destructive: oklch(0.55 0.19 27);
   --border: oklch(0.915 0.004 85);
   --input: oklch(0.905 0.004 85);
-  --ring: oklch(0.58 0.19 285);
+  --ring: oklch(0.62 0.012 80);
 
   --agent: oklch(0.55 0.2 285);
   --agent-foreground: oklch(0.985 0.002 90);
   --agent-muted: oklch(0.955 0.025 290);
   --online: oklch(0.68 0.16 155);
+  --review: oklch(0.72 0.14 72);
 
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: var(--foreground);
@@ -142,12 +144,13 @@
   --destructive: oklch(0.7 0.17 22);
   --border: oklch(1 0 0 / 8%);
   --input: oklch(1 0 0 / 13%);
-  --ring: oklch(0.68 0.16 288);
+  --ring: oklch(0.58 0.012 280);
 
   --agent: oklch(0.74 0.15 290);
   --agent-foreground: oklch(0.17 0.01 285);
   --agent-muted: oklch(0.29 0.055 290);
   --online: oklch(0.74 0.14 158);
+  --review: oklch(0.79 0.13 76);
 
   --sidebar: oklch(0.198 0.005 280);
   --sidebar-foreground: var(--foreground);

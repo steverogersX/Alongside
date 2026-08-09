@@ -14,12 +14,15 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
+import { EmptyState } from "@/components/empty-state";
 import { FeedSkeleton } from "@/components/skeletons";
 import {
   useCreateLink,
   useDocumentLinks,
   useRevokeLink,
 } from "@/lib/queries";
+import type { ChatAccess } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const EXPIRY = [
@@ -37,6 +40,7 @@ export function ShareDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [role, setRole] = useState<"viewer" | "editor">("viewer");
+  const [chat, setChat] = useState<ChatAccess>("none");
   const [days, setDays] = useState<number | undefined>(undefined);
   const [fresh, setFresh] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -49,7 +53,7 @@ export function ShareDialog({
 
   function create() {
     createLink.mutate(
-      { role, ...(days ? { expiresInDays: days } : {}) },
+      { role, chatAccess: chat, ...(days ? { expiresInDays: days } : {}) },
       {
         onSuccess: (result) => {
           setFresh(`${window.location.origin}/s/${result.token}`);
@@ -99,7 +103,14 @@ export function ShareDialog({
                 onFocus={(event) => event.currentTarget.select()}
                 className="h-8 bg-card font-mono text-[11.5px]"
               />
-              <Button size="sm" onClick={() => void copy(fresh)}>
+              <Button
+                size="sm"
+                onClick={() => void copy(fresh)}
+                className={cn(
+                  copied &&
+                    "bg-online text-background hover:bg-online focus-visible:ring-online/40"
+                )}
+              >
                 {copied ? <Check /> : <Copy />}
                 {copied ? "Copied" : "Copy"}
               </Button>
@@ -131,14 +142,29 @@ export function ShareDialog({
               />
             </div>
 
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[12.5px] text-muted-foreground">
+                Document chat
+              </span>
+              <Segmented
+                options={[
+                  { value: "none", label: "hidden" },
+                  { value: "read", label: "read" },
+                  { value: "write", label: "join in" },
+                ]}
+                value={chat}
+                onChange={(next) => setChat(next as ChatAccess)}
+              />
+            </div>
+
             <Button
               size="sm"
               className="w-fit"
               onClick={create}
               disabled={createLink.isPending}
             >
-              <Link2 />
-              {createLink.isPending ? "Creating…" : "Create link"}
+              {createLink.isPending ? <Spinner /> : <Link2 />}
+              Create link
             </Button>
 
             {createLink.isError && (
@@ -159,9 +185,12 @@ export function ShareDialog({
           {links.isPending ? (
             <FeedSkeleton rows={2} />
           ) : list.length === 0 ? (
-            <p className="py-2 text-[12.5px] text-muted-foreground">
-              No links yet. This document is visible to workspace members only.
-            </p>
+            <EmptyState
+              size="sm"
+              icon={Link2}
+              title="No links yet"
+              body="This document is visible to workspace members only. Create a link to let someone outside open it."
+            />
           ) : (
             <ul className="flex flex-col divide-y divide-border/60">
               {list.map((link) => (
@@ -173,6 +202,12 @@ export function ShareDialog({
                       {link.role === "editor" ? "edit" : "read"}
                     </span>
                     <span className="block truncate text-[11.5px] text-muted-foreground">
+                      {link.chatAccess === "none"
+                        ? "Chat hidden"
+                        : link.chatAccess === "read"
+                          ? "Can read chat"
+                          : "Can join chat"}
+                      {" · "}
                       {link.expiresAt
                         ? `Expires ${new Date(link.expiresAt).toLocaleDateString()}`
                         : "No expiry"}
