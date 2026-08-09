@@ -75,6 +75,6 @@ export const linkService = {
     if (!link || !isLive(link)) return null;
     if (link.documentId !== claims.documentId) return null;
 
-    return { link, role: link.role };
+    return { link, role: link.role, visitorId: claims.visitorId };
   },
 };

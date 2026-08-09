@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import type { Response } from "express";
 import { SignJWT, jwtVerify } from "jose";
 
@@ -17,6 +17,7 @@ export type LinkClaims = {
   linkId: string;
   documentId: string;
   role: Role;
+  visitorId: string;
 };
 
 export const mintToken = () => randomBytes(32).toString("base64url");
@@ -25,12 +26,13 @@ export const hashToken = (token: string) =>
   createHash("sha256").update(token).digest("hex");
 
 export const linkToken = {
-  async issue(claims: LinkClaims, res: Response) {
+  async issue(claims: Omit<LinkClaims, "visitorId">, res: Response) {
     const expiresAt = new Date(Date.now() + LINK_SESSION_HOURS * 3_600_000);
 
     const jwt = await new SignJWT({
       documentId: claims.documentId,
       role: claims.role,
+      visitorId: randomUUID(),
     })
       .setProtectedHeader({ alg: "HS256" })
       .setSubject(claims.linkId)
@@ -68,6 +70,8 @@ export const linkToken = {
         linkId: payload.sub,
         documentId: payload.documentId,
         role: payload.role,
+        visitorId:
+          typeof payload.visitorId === "string" ? payload.visitorId : payload.sub,
       };
     } catch {
       return null;

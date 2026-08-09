@@ -7,7 +7,12 @@ import { linkService } from "@/modules/links/link.service.ts";
 declare global {
   namespace Express {
     interface Request {
-      link?: { linkId: string; documentId: string; role: Role };
+      link?: {
+        linkId: string;
+        documentId: string;
+        role: Role;
+        visitorId: string;
+      };
     }
   }
 }
@@ -26,6 +31,7 @@ export async function attachLink(
         linkId: resolved.link.id,
         documentId: resolved.link.documentId,
         role: resolved.role,
+        visitorId: resolved.visitorId,
       };
     }
   }
