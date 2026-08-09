@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { ChatEmpty } from "@/components/doc/chat-empty";
 import { ChatView, type ChatEntry } from "@/components/doc/chat-view";
 import type { ChatReaction } from "@/components/doc/message-reactions";
 import { useChat, useChatAccess, useSendMessage } from "@/lib/queries";
@@ -72,9 +73,9 @@ export function DocChat({ documentId }: { documentId: string }) {
 
   if (!access.isPending && level === "none") {
     return (
-      <p className="p-4 text-[12.5px] leading-relaxed text-muted-foreground">
-        The chat for this document has not been shared with you.
-      </p>
+      <div className="grid min-h-0 flex-1 place-items-center">
+        <ChatEmpty variant="none" />
+      </div>
     );
   }
 

@@ -5,6 +5,7 @@ import { ArrowUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ChatSkeleton } from "@/components/skeletons";
+import { ChatEmpty } from "@/components/doc/chat-empty";
 import {
   ReactionButton,
   ReactionChips,
@@ -60,6 +61,7 @@ export function ChatView({
   const endRef = useRef<HTMLDivElement>(null);
 
   const canReact = onToggleReaction !== undefined && !disabled;
+  const isEmpty = !loading && messages.length === 0;
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
@@ -68,15 +70,15 @@ export function ChatView({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="flex min-h-full flex-col justify-end px-3 py-3">
+        <div
+          className={cn(
+            "flex min-h-full flex-col px-3 py-3",
+            isEmpty ? "justify-center" : "justify-end"
+          )}
+        >
           {loading && <ChatSkeleton />}
 
-          {!loading && messages.length === 0 && (
-            <p className="px-1 py-6 text-center text-[12.5px] leading-relaxed text-muted-foreground">
-              No messages yet. Everyone in this document sees this thread,
-              agents included.
-            </p>
-          )}
+          {isEmpty && <ChatEmpty variant={disabled ? "read" : "write"} />}
 
           <ol className="flex flex-col">
             {messages.map((message, index) => {
