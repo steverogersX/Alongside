@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { ChatEmpty } from "@/components/doc/chat-empty";
 import { ChatView, type ChatEntry } from "@/components/doc/chat-view";
 import type { ChatReaction } from "@/components/doc/message-reactions";
 import type { Mentionable } from "@/components/doc/mention-menu";
+import { useDocumentEvents } from "@/lib/collab";
 import {
+  keys,
   useCancelRun,
   useChat,
   useChatAccess,
@@ -34,19 +37,30 @@ export function DocChat({ documentId }: { documentId: string }) {
   const level = access.data?.chat ?? "none";
   const viewerId = access.data?.viewerId ?? null;
 
-  const runs = useRuns(documentId, true);
-
-  // While an agent is working the answer arrives without anyone typing, so the
-  // thread has to come to us.
-  const live = (runs.data?.runs ?? []).some(
-    (run) => run.status === "queued" || run.status === "running"
-  );
-
+  const runs = useRuns(documentId);
   const chat = useChat(
     documentId,
-    access.data !== undefined && level !== "none",
-    live
+    access.data !== undefined && level !== "none"
   );
+
+  const client = useQueryClient();
+
+  // The server tells us what changed over the document socket, so a teammate's
+  // message or an agent's reply lands immediately without polling for it.
+  const onEvent = useCallback(
+    (event: string) => {
+      if (event === "chat") {
+        void client.invalidateQueries({ queryKey: keys.chat(documentId) });
+      }
+
+      if (event === "runs") {
+        void client.invalidateQueries({ queryKey: keys.runs(documentId) });
+      }
+    },
+    [client, documentId]
+  );
+
+  useDocumentEvents(documentId, level !== "none", onEvent);
   const send = useSendMessage(documentId);
   const cancel = useCancelRun(documentId);
 
