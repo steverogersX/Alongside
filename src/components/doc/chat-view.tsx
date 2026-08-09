@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { ChatSkeleton } from "@/components/skeletons";
 import { ChatEmpty } from "@/components/doc/chat-empty";
 import {
@@ -261,7 +262,7 @@ export function ChatView({
             disabled={disabled || sending || !draft.trim()}
             className="shrink-0"
           >
-            <ArrowUp />
+            {sending ? <Spinner label="Sending" /> : <ArrowUp />}
           </Button>
         </form>
       </div>

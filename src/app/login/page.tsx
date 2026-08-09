@@ -9,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { FormField } from "@/components/auth/form-field";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { ApiRequestError } from "@/lib/api";
 import { keys } from "@/lib/queries";
 import { login, loginSchema } from "@/lib/auth";
@@ -98,7 +99,8 @@ export default function LoginPage() {
         <form.Subscribe selector={(state) => state.isSubmitting}>
           {(isSubmitting) => (
             <Button type="submit" size="lg" disabled={isSubmitting}>
-              {isSubmitting ? "Signing in…" : "Sign in"}
+              {isSubmitting && <Spinner />}
+              Sign in
             </Button>
           )}
         </form.Subscribe>

@@ -6,6 +6,7 @@ import { useForm } from "@tanstack/react-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -197,7 +198,8 @@ export function CreateWorkspaceDialog({
             <form.Subscribe selector={(state) => state.isSubmitting}>
               {(isSubmitting) => (
                 <Button type="submit" size="sm" disabled={isSubmitting}>
-                  {isSubmitting ? "Creating…" : "Create workspace"}
+                  {isSubmitting && <Spinner />}
+                  Create workspace
                 </Button>
               )}
             </form.Subscribe>
