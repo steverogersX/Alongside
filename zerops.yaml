@@ -56,9 +56,10 @@ zerops:
         - next.config.ts
         - package.json
         - node_modules
+      # Only node_modules. A restored .next/cache brings back a .next the build
+      # user cannot write, and next build dies opening .next/trace.
       cache:
         - node_modules
-        - .next/cache
       envVariables:
         # Next inlines NEXT_PUBLIC_* at build time, so this has to be set here
         # rather than at run time — and spelled out, since the cross-service
