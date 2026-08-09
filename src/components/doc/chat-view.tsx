@@ -24,7 +24,6 @@ export type ChatEntry = {
   isYou?: boolean;
 };
 
-/** Consecutive messages from one person inside this window read as one turn. */
 const GROUP_WINDOW_MS = 5 * 60_000;
 
 const time = (iso: string) =>
@@ -58,13 +57,11 @@ export function ChatView({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {/* Anchored to the bottom so a short thread sits above the composer
-            instead of floating in a tall empty column. */}
         <div className="flex min-h-full flex-col justify-end px-3 py-3">
           {loading && <ChatSkeleton />}
 
           {!loading && messages.length === 0 && (
-            <p className="px-1 py-6 text-[12.5px] leading-relaxed text-muted-foreground">
+            <p className="px-1 py-6 text-center text-[12.5px] leading-relaxed text-muted-foreground">
               No messages yet. Everyone in this document sees this thread,
               agents included.
             </p>
@@ -80,6 +77,7 @@ export function ChatView({
                   new Date(previous.createdAt).getTime() <
                   GROUP_WINDOW_MS;
 
+              const mine = message.isYou === true;
               const isAgent = message.author.kind === "bot";
               const isGuest = message.author.kind === "guest";
 
@@ -87,47 +85,58 @@ export function ChatView({
                 <li
                   key={message.id}
                   className={cn(
-                    "group grid grid-cols-[1.5rem_1fr] gap-x-2.5 rounded-md px-1 transition-colors hover:bg-accent/40",
-                    grouped ? "pt-0.5 pb-0.5" : "mt-3 first:mt-0 pt-1 pb-0.5"
+                    "flex gap-2",
+                    mine ? "flex-row-reverse" : "flex-row",
+                    grouped ? "mt-0.5" : "mt-3 first:mt-0"
                   )}
                 >
-                  {grouped ? (
-                    <span className="pt-[3px] text-right text-[10px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
-                      {time(message.createdAt).replace(/\s?[AP]M/, "")}
-                    </span>
-                  ) : (
-                    <span
-                      className={cn(
-                        "mt-[1px] grid size-6 place-items-center overflow-hidden bg-secondary",
-                        isAgent ? "rounded-md" : "rounded-full",
-                        isGuest &&
-                          "bg-muted outline-1 -outline-offset-1 outline-dashed outline-border"
+                  {!mine && (
+                    <span className="w-6 shrink-0">
+                      {!grouped && (
+                        <span
+                          className={cn(
+                            "mt-4 grid size-6 place-items-center overflow-hidden bg-secondary",
+                            isAgent ? "rounded-md" : "rounded-full",
+                            isGuest &&
+                              "bg-muted outline-1 -outline-offset-1 outline-dashed outline-border"
+                          )}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={personAvatar(
+                              message.author.avatarSeed,
+                              isAgent ? "agent" : "human",
+                              56
+                            )}
+                            alt=""
+                            aria-hidden
+                            className="size-full select-none"
+                          />
+                        </span>
                       )}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={personAvatar(
-                          message.author.avatarSeed,
-                          isAgent ? "agent" : "human",
-                          56
-                        )}
-                        alt=""
-                        aria-hidden
-                        className="size-full select-none"
-                      />
                     </span>
                   )}
 
-                  <div className="min-w-0">
+                  <div
+                    className={cn(
+                      "flex min-w-0 max-w-[85%] flex-col",
+                      mine ? "items-end" : "items-start"
+                    )}
+                  >
                     {!grouped && (
-                      <div className="flex items-baseline gap-1.5">
+                      <div
+                        className={cn(
+                          "flex items-baseline gap-1.5 px-1 pb-1",
+                          mine && "flex-row-reverse"
+                        )}
+                      >
                         <span
                           className={cn(
-                            "truncate text-[12.5px] font-semibold",
-                            isAgent && "text-agent"
+                            "truncate text-[11.5px] font-medium",
+                            isAgent ? "text-agent" : "text-muted-foreground"
                           )}
                         >
-                          {message.isYou ? "You" : message.author.displayName}
+                          {mine ? "You" : message.author.displayName}
                         </span>
 
                         {isAgent && message.author.model && (
@@ -142,7 +151,7 @@ export function ChatView({
                           </span>
                         )}
 
-                        <span className="shrink-0 text-[10.5px] text-muted-foreground">
+                        <span className="shrink-0 text-[10.5px] text-muted-foreground/70">
                           {time(message.createdAt)}
                         </span>
                       </div>
@@ -150,9 +159,12 @@ export function ChatView({
 
                     <p
                       className={cn(
-                        "text-[13px] leading-[1.55] break-words whitespace-pre-wrap",
+                        "px-3 py-1.5 text-[13px] leading-[1.5] break-words whitespace-pre-wrap",
+                        mine
+                          ? "rounded-2xl rounded-br-md bg-primary text-primary-foreground"
+                          : "rounded-2xl rounded-bl-md bg-secondary text-foreground",
                         isAgent &&
-                          "mt-0.5 border-l-2 border-agent/35 pl-2 text-foreground/90"
+                          "bg-agent/10 text-foreground ring-1 ring-agent/20"
                       )}
                     >
                       {message.body}
