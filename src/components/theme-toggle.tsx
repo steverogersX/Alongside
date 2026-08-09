@@ -15,7 +15,7 @@ const OPTIONS = [
 
 const subscribe = () => () => {};
 
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
   const mounted = useSyncExternalStore(
     subscribe,
@@ -24,7 +24,14 @@ export function ThemeToggle() {
   );
 
   return (
-    <div className="flex items-center gap-0.5 rounded-lg border border-sidebar-border p-0.5">
+    <div
+      role="group"
+      aria-label="Theme"
+      className={cn(
+        "flex shrink-0 items-center gap-px rounded-md border border-sidebar-border p-px",
+        className
+      )}
+    >
       {OPTIONS.map((option) => {
         const active = mounted && theme === option.value;
 
@@ -37,10 +44,10 @@ export function ThemeToggle() {
             aria-pressed={active}
             onClick={() => setTheme(option.value)}
             className={cn(
-              "flex-1",
+              "rounded-[4px]",
               active
                 ? "bg-sidebar-accent text-foreground"
-                : "text-muted-foreground"
+                : "text-muted-foreground/70"
             )}
           >
             <option.icon />

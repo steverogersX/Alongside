@@ -35,23 +35,25 @@ export function DocumentView({ documentId }: { documentId: string }) {
 
   return (
     <>
-      <h1 className="font-serif text-[28px] leading-tight font-semibold tracking-tight">
-        {doc.title}
-      </h1>
+      <header className="border-b border-border/70 pb-5">
+        <h1 className="font-serif text-[34px] leading-[1.12] font-semibold tracking-[-0.022em] text-balance">
+          {doc.title}
+        </h1>
 
-      <div className="mt-3 flex flex-wrap items-center gap-3">
-        <DocStatus status={doc.status} />
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <DocStatus status={doc.status} />
 
-        {!canEdit && (
-          <span className="text-[12px] text-muted-foreground">Read only</span>
-        )}
+          {!canEdit && (
+            <span className="datum text-muted-foreground">Read only</span>
+          )}
 
-        <span className="ml-auto">
-          <PresenceBar viewers={viewers} />
-        </span>
-      </div>
+          <span className="ml-auto">
+            <PresenceBar viewers={viewers} ringClass="ring-card" />
+          </span>
+        </div>
+      </header>
 
-      <div className="mt-6 flex flex-1 flex-col">
+      <div className="mt-7 flex flex-1 flex-col">
         {session ? (
           <CollabEditor
             session={session}

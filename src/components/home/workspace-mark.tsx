@@ -2,7 +2,9 @@ import Avatar from "boring-avatars";
 
 import { cn } from "@/lib/utils";
 
-const PALETTE = ["#1f3a5f", "#3e7cb1", "#5fa8a3", "#c9a27c", "#b8574c"];
+/* Drawn from the two voices: blueprint navy through cobalt, then the copper
+   the agents write in. Every workspace is a different fold of the same paper. */
+const PALETTE = ["#16233f", "#2b57c9", "#6f8fc4", "#c2703a", "#e0cba7"];
 
 export function WorkspaceMark({
   seed,
@@ -17,7 +19,7 @@ export function WorkspaceMark({
     <span
       aria-hidden
       className={cn(
-        "inline-flex shrink-0 overflow-hidden rounded-lg select-none",
+        "inline-flex shrink-0 overflow-hidden rounded-md select-none",
         className
       )}
     >

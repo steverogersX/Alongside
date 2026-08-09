@@ -101,10 +101,10 @@ function Row({
   return (
     <li
       className={cn(
-        "flex items-center gap-3 rounded-xl border border-border/60 px-3.5 py-2.5",
+        "flex items-center gap-3 rounded-lg border border-border/60 px-3.5 py-2.5",
         // The newest keeps the claim tint for a beat, so the eye knows what
         // just came back.
-        fresh ? "bg-agent-muted/45" : "bg-sidebar/40",
+        fresh ? "bg-agent-muted/45" : "bg-card/55",
         "transition-colors duration-700",
         !still && "animate-land"
       )}
@@ -201,7 +201,7 @@ export function ClaimBoard() {
             className="animate-land absolute inset-y-0 left-0 w-[2px] rounded-full bg-agent"
           />
 
-          <span className="animate-land inline-flex rounded-md bg-agent px-1.5 py-0.5 text-[10.5px] leading-[1.5] font-medium text-agent-foreground">
+          <span className="animate-land inline-flex rounded-[4px] bg-agent px-1.5 py-0.5 font-mono text-[10.5px] leading-[1.5] font-medium tracking-[0.06em] text-agent-foreground uppercase">
             Claude
           </span>
 

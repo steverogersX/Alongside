@@ -30,6 +30,28 @@ export function RowsSkeleton({
   );
 }
 
+export function TilesSkeleton({ tiles = 3 }: { tiles?: number }) {
+  return (
+    <div
+      role="status"
+      aria-label="Loading workspaces"
+      className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+    >
+      {Array.from({ length: tiles }, (_, index) => (
+        <div
+          key={index}
+          className="flex min-h-[9.5rem] flex-col rounded-lg border border-border p-4"
+        >
+          <Skeleton className="size-10 rounded-md" />
+          <Skeleton className="mt-3.5 h-3.5 w-32 max-w-[60%]" />
+          <Skeleton className="mt-2 h-2.5 w-full max-w-[85%]" />
+          <Skeleton className="mt-auto h-2.5 w-20" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function DocumentSkeleton() {
   return (
     <div role="status" aria-label="Loading document" className="flex flex-col">

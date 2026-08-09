@@ -113,7 +113,7 @@ export function CollabEditor({
   return (
     <div className="flex flex-1 flex-col">
       {editable && (
-        <div className="sticky top-12 z-10 flex items-center gap-0.5 rounded-lg bg-sidebar/90 px-2 py-1.5 backdrop-blur-md">
+        <div className="sticky top-0 z-10 -mx-2 flex items-center gap-0.5 rounded-lg bg-card/92 px-2 py-1.5 backdrop-blur-md">
           {tools.map((tool) => (
             <Button
               key={tool.label}
@@ -142,7 +142,7 @@ export function CollabEditor({
 
           <Separator orientation="vertical" className="mx-1 h-4" />
 
-          <span className="flex items-center gap-1.5 text-[11.5px] text-muted-foreground">
+          <span className="datum flex items-center gap-1.5 text-muted-foreground">
             <span
               className={cn(
                 "size-1.5 rounded-full",
@@ -152,7 +152,7 @@ export function CollabEditor({
             {connected ? "Live" : "Connecting"}
           </span>
 
-          <span className="ml-auto text-[11.5px] text-muted-foreground tabular-nums">
+          <span className="datum ml-auto text-muted-foreground">
             {state?.words ?? 0} words
           </span>
         </div>

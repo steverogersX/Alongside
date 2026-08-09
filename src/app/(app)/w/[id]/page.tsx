@@ -2,14 +2,14 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
-import { Bot, ChevronRight, FileText, FolderX, Plus } from "lucide-react";
+import { ArrowUpRight, Bot, FileText, FolderX, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { Shell, ShellHeader, ShellRail } from "@/components/shell";
+import { Shell, ShellRail } from "@/components/shell";
 import { EmptyState } from "@/components/empty-state";
+import { SectionHead } from "@/components/section-head";
 import { AgentsDialog } from "@/components/workspace/agents-dialog";
 import { DocStatus } from "@/components/doc/doc-status";
 import { MemberStack } from "@/components/home/member-stack";
@@ -40,24 +40,19 @@ export default function WorkspacePage({
   const agents = members.filter((row) => row.user.kind === "bot");
 
   return (
-    <Shell activeNav="" activeWorkspaceId={id} rail={<Rail id={id} />}>
-      <ShellHeader>
-        <Link
-          href="/"
-          className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Workspaces
-        </Link>
-        <ChevronRight className="size-3.5 shrink-0 text-muted-foreground/50" />
-        <span className="truncate text-[13px] font-medium">
-          {detail?.workspace.name ?? "…"}
-        </span>
-
-        <div className="ml-auto flex items-center gap-2">
+    <Shell
+      rail={<Rail id={id} />}
+      railLabel="people"
+      crumbs={[
+        { label: "Home", href: "/" },
+        { label: detail?.workspace.name ?? "…" },
+      ]}
+      actions={
+        <>
           <AgentsDialog
             workspaceId={id}
             trigger={
-              <Button variant="outline" size="sm">
+              <Button variant="ghost" size="sm">
                 <Bot />
                 Agents
               </Button>
@@ -67,18 +62,16 @@ export default function WorkspacePage({
             <Plus />
             New doc
           </Button>
-        </div>
-      </ShellHeader>
-
-      <main className="px-6 pt-6 pb-12">
-        <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+        </>
+      }
+    >
+      <main className="px-6 pt-8 pb-16 sm:px-10">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-10">
           {workspace.isPending ? (
             <>
               <WorkspaceHeaderSkeleton />
               <div>
-                <div className="flex items-center justify-between border-b border-border pb-2.5">
-                  <h2 className="eyebrow">Documents</h2>
-                </div>
+                <SectionHead label="Documents" />
                 <RowsSkeleton rows={3} />
               </div>
             </>
@@ -95,46 +88,58 @@ export default function WorkspacePage({
             />
           ) : (
             <>
-              <div className="flex items-start gap-4">
-                <WorkspaceMark
-                  seed={detail.workspace.id}
-                  size={48}
-                  className="size-12 rounded-xl"
-                />
-                <div className="min-w-0 flex-1">
-                  <h1 className="text-[22px] font-semibold tracking-tight">
-                    {detail.workspace.name}
-                  </h1>
-                  <p className="mt-1 text-[13px] text-muted-foreground">
-                    {detail.workspace.purpose ?? "No description yet"}
+              <header className="animate-rise">
+                <div className="flex items-start gap-4">
+                  <WorkspaceMark
+                    seed={detail.workspace.id}
+                    size={52}
+                    className="mt-1 size-13 rounded-lg"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <h1 className="display text-[30px]">
+                      {detail.workspace.name}
+                    </h1>
+                    <p className="mt-2 max-w-xl text-[13.5px] leading-relaxed text-muted-foreground">
+                      {detail.workspace.purpose ?? "No description yet."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex flex-wrap items-center gap-3">
+                  <MemberStack
+                    members={members.map((row) => row.user)}
+                    max={6}
+                    ringClass="ring-card"
+                  />
+                  <p className="datum flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground">
+                    <span>
+                      {humans.length} {humans.length === 1 ? "person" : "people"}
+                    </span>
+                    <span aria-hidden className="text-border">
+                      /
+                    </span>
+                    <span>
+                      {agents.length} {agents.length === 1 ? "agent" : "agents"}
+                    </span>
+                    <span aria-hidden className="text-border">
+                      /
+                    </span>
+                    <span>
+                      you can {detail.role === "viewer" ? "read" : "edit"}
+                    </span>
                   </p>
                 </div>
-              </div>
+              </header>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <MemberStack
-                  members={members.map((row) => row.user)}
-                  max={6}
-                  ringClass="ring-sidebar"
+              <section>
+                <SectionHead
+                  label="Documents"
+                  count={detail.documents.length}
                 />
-                <span className="text-[12px] text-muted-foreground">
-                  {humans.length} {humans.length === 1 ? "person" : "people"} ·{" "}
-                  {agents.length} {agents.length === 1 ? "agent" : "agents"} ·
-                  you can {detail.role === "viewer" ? "read" : "edit"}
-                </span>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between border-b border-border pb-2.5">
-                  <h2 className="eyebrow">Documents</h2>
-                  <span className="text-[12px] text-muted-foreground tabular-nums">
-                    {detail.documents.length}
-                  </span>
-                </div>
 
                 {creating && (
                   <form
-                    className="flex items-center gap-2 py-3"
+                    className="mb-1 flex items-center gap-2 pb-4"
                     onSubmit={(event) => {
                       event.preventDefault();
                       if (!title.trim()) return;
@@ -155,15 +160,18 @@ export default function WorkspacePage({
                       placeholder="Document title"
                       aria-label="Document title"
                       autoFocus
-                      className="h-8 max-w-xs"
+                      className="max-w-sm"
                     />
-                    <Button
-                      type="submit"
-                      size="sm"
-                      disabled={createDocument.isPending}
-                    >
+                    <Button type="submit" disabled={createDocument.isPending}>
                       {createDocument.isPending && <Spinner />}
                       Create
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setCreating(false)}
+                    >
+                      Cancel
                     </Button>
                   </form>
                 )}
@@ -175,7 +183,7 @@ export default function WorkspacePage({
                     body="Documents are where the work happens — people and agents write in them together."
                     action={
                       !creating && (
-                        <Button size="sm" onClick={() => setCreating(true)}>
+                        <Button onClick={() => setCreating(true)}>
                           <Plus />
                           New doc
                         </Button>
@@ -183,33 +191,56 @@ export default function WorkspacePage({
                     }
                   />
                 ) : (
-                  <div className="divide-y divide-border/60">
+                  <div className="flex flex-col border-t border-border/70">
                     {detail.documents.map((doc) => (
-                      <div key={doc.id} className="group relative">
+                      <div
+                        key={doc.id}
+                        className="group relative border-b border-border/70"
+                      >
                         <Link
                           href={`/w/${id}/${doc.id}`}
-                          className="absolute inset-0 rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
+                          className="absolute inset-0 rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/35"
                         >
                           <span className="sr-only">Open {doc.title}</span>
                         </Link>
-                        <div className="pointer-events-none flex items-center gap-3 rounded-lg px-2.5 py-3 transition-colors group-hover:bg-accent/60">
-                          <FileText className="size-4 shrink-0 text-muted-foreground" />
-                          <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium">
+
+                        <div className="pointer-events-none relative flex items-center gap-3.5 rounded-md py-3.5 pr-2 pl-4 transition-colors group-hover:bg-accent/45">
+                          <span
+                            aria-hidden
+                            className="absolute inset-y-3 left-0 w-[3px] rounded-full bg-primary opacity-0 transition-opacity group-hover:opacity-100"
+                          />
+
+                          <FileText
+                            className="size-4 shrink-0 text-muted-foreground"
+                            strokeWidth={1.75}
+                          />
+
+                          <span className="min-w-0 flex-1 truncate text-[14px] font-semibold tracking-[-0.011em]">
                             {doc.title}
                           </span>
+
                           <DocStatus status={doc.status} />
-                          <span className="w-24 shrink-0 text-right text-[11.5px] whitespace-nowrap text-muted-foreground">
+
+                          <time
+                            dateTime={doc.updatedAt}
+                            className="datum hidden w-20 shrink-0 text-right whitespace-nowrap text-muted-foreground sm:block"
+                          >
                             {new Date(doc.updatedAt).toLocaleDateString(
                               undefined,
                               { month: "short", day: "numeric" }
                             )}
-                          </span>
+                          </time>
+
+                          <ArrowUpRight
+                            className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                            aria-hidden
+                          />
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
-              </div>
+              </section>
             </>
           )}
         </div>
@@ -218,45 +249,47 @@ export default function WorkspacePage({
   );
 }
 
+/** Who is in the room: people first, then the agents they can call on. */
 function Rail({ id }: { id: string }) {
   const workspace = useWorkspace(id);
   const members = workspace.data?.members ?? [];
   const humans = members.filter((row) => row.user.kind === "human");
   const agents = members.filter((row) => row.user.kind === "bot");
 
+  const addAgent = (
+    <AgentsDialog
+      workspaceId={id}
+      trigger={
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          aria-label="Add an agent"
+          className="shrink-0 text-muted-foreground"
+        >
+          <Plus />
+        </Button>
+      }
+    />
+  );
+
   if (workspace.isPending) {
     return (
-      <ShellRail>
-        <h2 className="eyebrow pb-3">People</h2>
+      <ShellRail className="px-4 py-5">
+        <SectionHead label="People" />
         <PeopleSkeleton rows={4} />
-
-        <Separator className="my-4" />
-
-        <div className="flex items-center justify-between pb-3">
-        <h2 className="eyebrow">Agents</h2>
-        <AgentsDialog
-          workspaceId={id}
-          trigger={
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              aria-label="Add an agent"
-              className="text-muted-foreground"
-            >
-              <Plus />
-            </Button>
-          }
-        />
-      </div>
-        <PeopleSkeleton rows={2} />
+        <div className="pt-8">
+          <SectionHead label="Agents" action={addAgent} />
+          <PeopleSkeleton rows={2} />
+        </div>
       </ShellRail>
     );
   }
 
   return (
-    <ShellRail>
-      <h2 className="eyebrow pb-3">People</h2>
-      <div className="flex flex-col gap-2.5">
+    <ShellRail className="px-4 py-5">
+      <SectionHead label="People" count={humans.length} />
+
+      <div className="flex flex-col gap-3">
         {humans.map((row) => (
           <div key={row.user.id} className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -264,76 +297,64 @@ function Rail({ id }: { id: string }) {
               src={personAvatar(row.user.avatarSeed, "human", 48)}
               alt=""
               aria-hidden
-              className="size-6 shrink-0 rounded-full select-none"
+              className="size-6.5 shrink-0 rounded-full select-none"
             />
-            <span className="min-w-0 flex-1 truncate text-[12.5px]">
+            <span className="min-w-0 flex-1 truncate text-[13px]">
               {row.user.displayName}
             </span>
-            <span className="text-[11px] text-muted-foreground">{row.role}</span>
+            <span className="datum shrink-0 text-muted-foreground">
+              {row.role}
+            </span>
           </div>
         ))}
       </div>
 
-      <Separator className="my-4" />
+      <div className="pt-8">
+        <SectionHead label="Agents" count={agents.length} action={addAgent} />
 
-      <div className="flex items-center justify-between pb-3">
-        <h2 className="eyebrow">Agents</h2>
-        <AgentsDialog
-          workspaceId={id}
-          trigger={
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              aria-label="Add an agent"
-              className="text-muted-foreground"
-            >
-              <Plus />
-            </Button>
-          }
-        />
-      </div>
-      <div className="flex flex-col gap-2.5">
-        {agents.length === 0 ? (
-          <EmptyState
-            size="sm"
-            icon={Bot}
-            title="No agents yet"
-            body="Add one with your own provider key and anyone here can bring it into a document with @."
-            className="px-0"
-            action={
-              <AgentsDialog
-                workspaceId={id}
-                trigger={
-                  <Button variant="outline" size="xs">
-                    <Plus />
-                    Add an agent
-                  </Button>
-                }
-              />
-            }
-          />
-        ) : (
-          agents.map((row) => (
-            <div key={row.user.id} className="flex items-center gap-2.5">
-              <AgentAvatar
-                provider={row.user.provider}
-                seed={row.user.avatarSeed}
-                className="size-6"
-              />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[12.5px] font-medium">
-                  {row.user.displayName}
+        <div className="flex flex-col gap-3">
+          {agents.length === 0 ? (
+            <EmptyState
+              size="sm"
+              icon={Bot}
+              title="No agents yet"
+              body="Add one with your own provider key, then anyone here can bring it into a document with @."
+              className="px-0"
+              action={
+                <AgentsDialog
+                  workspaceId={id}
+                  trigger={
+                    <Button variant="outline" size="sm">
+                      <Plus />
+                      Add an agent
+                    </Button>
+                  }
+                />
+              }
+            />
+          ) : (
+            agents.map((row) => (
+              <div key={row.user.id} className="flex items-center gap-2.5">
+                <AgentAvatar
+                  provider={row.user.provider}
+                  seed={row.user.avatarSeed}
+                  className="size-6.5 rounded-md"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13px] font-medium">
+                    {row.user.displayName}
+                  </span>
+                  <span className="datum block truncate text-muted-foreground">
+                    {row.user.model}
+                  </span>
                 </span>
-                <span className="block truncate font-mono text-[11px] text-muted-foreground">
-                  {row.user.model}
+                <span className="datum shrink-0 text-muted-foreground">
+                  {row.role}
                 </span>
-              </span>
-              <span className="text-[11px] text-muted-foreground">
-                {row.role}
-              </span>
-            </div>
-          ))
-        )}
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </ShellRail>
   );
