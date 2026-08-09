@@ -1,6 +1,9 @@
 import { db } from "@/db/client.ts";
 import type { User } from "@/db/types.ts";
-import { accessService } from "@/modules/access/access.service.ts";
+import {
+  accessService,
+  forgetAccess,
+} from "@/modules/access/access.service.ts";
 import { toPublicUser } from "@/modules/auth/auth.mapper.ts";
 import { workspaceRepository } from "@/modules/workspaces/workspace.repository.ts";
 import type {
@@ -87,17 +90,22 @@ export const workspaceService = {
       throw badRequest("Agents cannot be workspace admins");
     }
 
-    return workspaceRepository.upsertGrant({
+    const grant = await workspaceRepository.upsertGrant({
       userId: target.id,
       workspaceId,
       role: input.role,
       grantedBy: user.id,
     });
+
+    forgetAccess();
+
+    return grant;
   },
 
   async removeMember(user: User, workspaceId: string, memberId: string) {
     await accessService.requireWorkspaceRole(user, workspaceId, "admin");
     await workspaceRepository.removeGrant(workspaceId, memberId);
+    forgetAccess();
   },
 
   async createDocument(

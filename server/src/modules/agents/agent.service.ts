@@ -1,5 +1,6 @@
 import { db } from "@/db/client.ts";
 import type { User } from "@/db/types.ts";
+import { forgetAccess } from "@/modules/access/access.service.ts";
 import { agentRepository } from "@/modules/agents/agent.repository.ts";
 import type { CreateAgentInput } from "@/modules/agents/agent.schema.ts";
 import { toPublicUser } from "@/modules/auth/auth.mapper.ts";
@@ -33,5 +34,7 @@ export const agentService = {
       if (!agent) throw notFound("Agent not found");
       await agentRepository.revokeGrants(tx, agentId);
     });
+
+    forgetAccess();
   },
 };
