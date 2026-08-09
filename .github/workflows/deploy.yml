@@ -1,0 +1,101 @@
+name: deploy
+
+on:
+  push:
+    branches: [main, master, feat/mcp-agents]
+  workflow_dispatch:
+
+# A second push while one deploy is mid-flight would race the first; queue them.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install web
+        run: npm ci
+
+      - name: Install api
+        run: npm ci
+        working-directory: server
+
+      - name: Typecheck web
+        run: npx tsc --noEmit
+
+      - name: Lint web
+        run: npx eslint src --max-warnings=0
+
+      - name: Typecheck api
+        run: npx tsc --noEmit
+        working-directory: server
+
+  deploy:
+    needs: check
+    runs-on: ubuntu-latest
+    strategy:
+      # Both services build from the same commit and are independent, so a
+      # failure in one should not cancel the other mid-deploy.
+      fail-fast: false
+      matrix:
+        include:
+          - setup: api
+            serviceId: ${{ vars.ZEROPS_API_SERVICE_ID }}
+          - setup: web
+            serviceId: ${{ vars.ZEROPS_WEB_SERVICE_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install zcli
+        run: npm install -g @zerops/zcli
+
+      - name: Log in
+        run: zcli login "$ZEROPS_TOKEN"
+        env:
+          ZEROPS_TOKEN: ${{ secrets.ZEROPS_TOKEN }}
+
+      - name: Push ${{ matrix.setup }}
+        run: |
+          zcli push \
+            --projectId "$PROJECT_ID" \
+            --setup "${{ matrix.setup }}" \
+            --serviceId "${{ matrix.serviceId }}"
+        env:
+          PROJECT_ID: ${{ vars.ZEROPS_PROJECT_ID }}
+
+  smoke:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: API is serving
+        run: |
+          for i in 1 2 3 4 5; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/api/health")
+            echo "attempt $i -> $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 10
+          done
+          echo "API did not come back healthy"
+          exit 1
+        env:
+          API_URL: ${{ vars.ZEROPS_API_URL }}
+
+      - name: Web is serving
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" "$WEB_URL")
+          echo "web -> $code"
+          [ "$code" = "200" ]
+        env:
+          WEB_URL: ${{ vars.ZEROPS_WEB_URL }}
