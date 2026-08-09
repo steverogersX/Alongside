@@ -30,7 +30,11 @@ function parse<S extends Schemas>(schemas: S, req: Request) {
     const schema = schemas[slot];
     if (!schema) continue;
 
-    const result = schema.safeParse(req[slot]);
+    // Express 5 leaves req.body undefined for a request that carries no body,
+    // so a POST that legitimately sends nothing would fail an object schema.
+    const value = slot === "body" ? (req.body ?? {}) : req[slot];
+
+    const result = schema.safeParse(value);
     if (!result.success) {
       throw badRequest(
         `Invalid ${slot}`,
