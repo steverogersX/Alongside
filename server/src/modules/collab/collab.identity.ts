@@ -49,6 +49,9 @@ function colorFor(key: string) {
   return COLORS[hash % COLORS.length]!;
 }
 
+export const guestNameFor = (documentId: string, visitorId: string) =>
+  guestName(`${documentId}:${visitorId}`);
+
 const guestName = (seed: string) =>
   uniqueNamesGenerator({
     dictionaries: [adjectives, animals],
