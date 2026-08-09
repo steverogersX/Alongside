@@ -22,6 +22,18 @@ if (!parsed.success) {
 
 export const env = parsed.data;
 export const isProd = env.NODE_ENV === "production";
-export const corsOrigins = env.CORS_ORIGIN.split(",").map((value) =>
-  value.trim()
-);
+export const corsOrigins = env.CORS_ORIGIN.split(",")
+  .map((value) => value.trim())
+  // A host that never substituted its own reference would otherwise become a
+  // literal allowed origin, and every request would fail CORS with no clue why.
+  .filter((value) => value.length > 0 && !value.includes("${"));
+
+/**
+ * In production the app and the API are different origins, so the session
+ * cookie has to be sent cross-site — which browsers only allow for
+ * SameSite=None over HTTPS. Locally that would break plain-http development.
+ */
+export const cookiePolicy = {
+  sameSite: isProd ? ("none" as const) : ("lax" as const),
+  secure: isProd,
+};

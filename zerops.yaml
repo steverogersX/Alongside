@@ -37,11 +37,12 @@ zerops:
         NODE_ENV: production
         PORT: 4000
         DATABASE_URL: ${db_connectionString}
-        # SESSION_SECRET and CREDENTIALS_KEY come from the service's own
-        # secrets — redeclaring them here would overwrite them with an empty
-        # self-reference.
-        API_ORIGIN: ${zeropsSubdomain}
-        CORS_ORIGIN: ${web_zeropsSubdomain}
+        # Cross-service references such as ${web_zeropsSubdomain} arrive here as
+        # literal text rather than a URL, so these are spelled out. They are
+        # public addresses, not secrets — unlike SESSION_SECRET and
+        # CREDENTIALS_KEY, which live on the service and must not be named here.
+        API_ORIGIN: https://api-2b3f-4000.prg1.zerops.app
+        CORS_ORIGIN: https://web-2b3f-3000.prg1.zerops.app
 
   - setup: web
     build:
@@ -60,8 +61,9 @@ zerops:
         - .next/cache
       envVariables:
         # Next inlines NEXT_PUBLIC_* at build time, so this has to be set here
-        # rather than at run time.
-        NEXT_PUBLIC_API_URL: ${api_zeropsSubdomain}/api
+        # rather than at run time — and spelled out, since the cross-service
+        # reference is not substituted.
+        NEXT_PUBLIC_API_URL: https://api-2b3f-4000.prg1.zerops.app/api
     deploy:
       readinessCheck:
         httpGet:
