@@ -2,25 +2,24 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, FileText, Plus } from "lucide-react";
+import { Bot, ChevronRight, FileText, FolderX, Plus } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
 import { Shell, ShellHeader, ShellRail } from "@/components/shell";
+import { EmptyState } from "@/components/empty-state";
+import { DocStatus } from "@/components/doc/doc-status";
 import { MemberStack } from "@/components/home/member-stack";
 import { WorkspaceMark } from "@/components/home/workspace-mark";
-import { RowsSkeleton, WorkspaceHeaderSkeleton } from "@/components/skeletons";
+import {
+  PeopleSkeleton,
+  RowsSkeleton,
+  WorkspaceHeaderSkeleton,
+} from "@/components/skeletons";
 import { personAvatar } from "@/lib/avatars";
 import { useCreateDocument, useWorkspace } from "@/lib/queries";
-import { cn } from "@/lib/utils";
-
-const STATUS_LABEL: Record<string, string> = {
-  draft: "draft",
-  in_review: "in review",
-  final: "final",
-};
 
 export default function WorkspacePage({
   params,
@@ -73,9 +72,16 @@ export default function WorkspacePage({
               </div>
             </>
           ) : !detail ? (
-            <p className="text-[13px] text-muted-foreground">
-              That workspace is not available.
-            </p>
+            <EmptyState
+              icon={FolderX}
+              title="Workspace not available"
+              body="It may have been removed, or your access to it revoked."
+              action={
+                <Button asChild size="sm" variant="outline">
+                  <Link href="/">Back to workspaces</Link>
+                </Button>
+              }
+            />
           ) : (
             <>
               <div className="flex items-start gap-4">
@@ -145,15 +151,26 @@ export default function WorkspacePage({
                       size="sm"
                       disabled={createDocument.isPending}
                     >
-                      {createDocument.isPending ? "Creating…" : "Create"}
+                      {createDocument.isPending && <Spinner />}
+                      Create
                     </Button>
                   </form>
                 )}
 
                 {detail.documents.length === 0 ? (
-                  <p className="py-6 text-[13px] text-muted-foreground">
-                    No documents yet.
-                  </p>
+                  <EmptyState
+                    icon={FileText}
+                    title="No documents yet"
+                    body="Documents are where the work happens — people and agents write in them together."
+                    action={
+                      !creating && (
+                        <Button size="sm" onClick={() => setCreating(true)}>
+                          <Plus />
+                          New doc
+                        </Button>
+                      )
+                    }
+                  />
                 ) : (
                   <div className="divide-y divide-border/60">
                     {detail.documents.map((doc) => (
@@ -169,17 +186,7 @@ export default function WorkspacePage({
                           <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium">
                             {doc.title}
                           </span>
-                          <Badge
-                            variant="ghost"
-                            className={cn(
-                              "h-4 px-0 text-[10.5px]",
-                              doc.status === "final"
-                                ? "text-online"
-                                : "text-muted-foreground"
-                            )}
-                          >
-                            {STATUS_LABEL[doc.status]}
-                          </Badge>
+                          <DocStatus status={doc.status} />
                           <span className="w-24 shrink-0 text-right text-[11.5px] whitespace-nowrap text-muted-foreground">
                             {new Date(doc.updatedAt).toLocaleDateString(
                               undefined,
@@ -205,6 +212,20 @@ function Rail({ id }: { id: string }) {
   const members = workspace.data?.members ?? [];
   const humans = members.filter((row) => row.user.kind === "human");
   const agents = members.filter((row) => row.user.kind === "bot");
+
+  if (workspace.isPending) {
+    return (
+      <ShellRail>
+        <h2 className="eyebrow pb-3">People</h2>
+        <PeopleSkeleton rows={4} />
+
+        <Separator className="my-4" />
+
+        <h2 className="eyebrow pb-3">Agents</h2>
+        <PeopleSkeleton rows={2} />
+      </ShellRail>
+    );
+  }
 
   return (
     <ShellRail>
@@ -232,9 +253,13 @@ function Rail({ id }: { id: string }) {
       <h2 className="eyebrow pb-3">Agents</h2>
       <div className="flex flex-col gap-2.5">
         {agents.length === 0 ? (
-          <p className="text-[12px] text-muted-foreground">
-            No agents have a seat here yet.
-          </p>
+          <EmptyState
+            size="sm"
+            icon={Bot}
+            title="No agents yet"
+            body="Connect an agent and it joins here with a seat and a role."
+            className="px-0"
+          />
         ) : (
           agents.map((row) => (
             <div key={row.user.id} className="flex items-center gap-2.5">

@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
+import { EmptyState } from "@/components/empty-state";
 import { FeedSkeleton } from "@/components/skeletons";
 import {
   useCreateLink,
@@ -101,7 +103,14 @@ export function ShareDialog({
                 onFocus={(event) => event.currentTarget.select()}
                 className="h-8 bg-card font-mono text-[11.5px]"
               />
-              <Button size="sm" onClick={() => void copy(fresh)}>
+              <Button
+                size="sm"
+                onClick={() => void copy(fresh)}
+                className={cn(
+                  copied &&
+                    "bg-online text-background hover:bg-online focus-visible:ring-online/40"
+                )}
+              >
                 {copied ? <Check /> : <Copy />}
                 {copied ? "Copied" : "Copy"}
               </Button>
@@ -154,8 +163,8 @@ export function ShareDialog({
               onClick={create}
               disabled={createLink.isPending}
             >
-              <Link2 />
-              {createLink.isPending ? "Creating…" : "Create link"}
+              {createLink.isPending ? <Spinner /> : <Link2 />}
+              Create link
             </Button>
 
             {createLink.isError && (
@@ -176,9 +185,12 @@ export function ShareDialog({
           {links.isPending ? (
             <FeedSkeleton rows={2} />
           ) : list.length === 0 ? (
-            <p className="py-2 text-[12.5px] text-muted-foreground">
-              No links yet. This document is visible to workspace members only.
-            </p>
+            <EmptyState
+              size="sm"
+              icon={Link2}
+              title="No links yet"
+              body="This document is visible to workspace members only. Create a link to let someone outside open it."
+            />
           ) : (
             <ul className="flex flex-col divide-y divide-border/60">
               {list.map((link) => (
