@@ -4,6 +4,7 @@ import { agentRepository } from "@/modules/agents/agent.repository.ts";
 import type { CreateAgentInput } from "@/modules/agents/agent.schema.ts";
 import { toPublicUser } from "@/modules/auth/auth.mapper.ts";
 import { notFound } from "@/shared/errors.ts";
+import { last4, seal } from "@/shared/crypto.ts";
 
 export const agentService = {
   async list(user: User) {
@@ -16,6 +17,10 @@ export const agentService = {
       orgId: user.orgId,
       displayName: input.displayName,
       model: input.model,
+      provider: input.provider,
+      baseUrl: input.baseUrl ?? null,
+      keyCipher: seal(input.apiKey),
+      keyLast4: last4(input.apiKey),
       createdBy: user.id,
     });
 

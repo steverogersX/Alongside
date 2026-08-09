@@ -9,4 +9,6 @@ export const toPublicUser = (user: User): PublicUser => ({
   isOrgAdmin: user.isOrgAdmin,
   email: user.email,
   model: user.model,
+  provider: user.provider,
+  keyLast4: user.keyLast4,
 });

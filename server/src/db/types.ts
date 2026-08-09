@@ -39,4 +39,6 @@ export type PublicUser = Pick<
   | "isOrgAdmin"
   | "email"
   | "model"
+  | "provider"
+  | "keyLast4"
 >;

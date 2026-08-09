@@ -21,6 +21,10 @@ export const agentRepository = {
     orgId: string;
     displayName: string;
     model: string;
+    provider: string;
+    baseUrl: string | null;
+    keyCipher: string;
+    keyLast4: string;
     createdBy: string;
   }) {
     const [agent] = await db
