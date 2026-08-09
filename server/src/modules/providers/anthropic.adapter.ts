@@ -1,5 +1,5 @@
 import type { Adapter, Reply, ToolCall } from "@/modules/providers/provider.types.ts";
-import { badGateway } from "@/shared/errors.ts";
+import { providerError } from "@/modules/providers/provider.error.ts";
 
 type Block =
   | { type: "text"; text: string }
@@ -62,9 +62,7 @@ export const anthropicAdapter: Adapter = {
       }
     );
 
-    if (!response.ok) {
-      throw badGateway(await describe(response));
-    }
+    if (!response.ok) throw await providerError(response);
 
     const payload = (await response.json()) as { content: Block[] };
 
@@ -89,11 +87,3 @@ export const anthropicAdapter: Adapter = {
     return { text, calls } satisfies Reply;
   },
 };
-
-async function describe(response: Response) {
-  const body = (await response.json().catch(() => null)) as {
-    error?: { message?: string };
-  } | null;
-
-  return body?.error?.message ?? `Provider returned ${response.status}`;
-}

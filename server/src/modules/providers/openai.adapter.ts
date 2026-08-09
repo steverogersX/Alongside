@@ -1,5 +1,5 @@
 import type { Adapter, Reply, ToolCall } from "@/modules/providers/provider.types.ts";
-import { badGateway } from "@/shared/errors.ts";
+import { providerError } from "@/modules/providers/provider.error.ts";
 
 type Choice = {
   message: {
@@ -74,14 +74,7 @@ export const openaiAdapter: Adapter = {
       }
     );
 
-    if (!response.ok) {
-      const body = (await response.json().catch(() => null)) as {
-        error?: { message?: string };
-      } | null;
-      throw badGateway(
-        body?.error?.message ?? `Provider returned ${response.status}`
-      );
-    }
+    if (!response.ok) throw await providerError(response);
 
     const payload = (await response.json()) as { choices: Choice[] };
     const message = payload.choices[0]?.message;
