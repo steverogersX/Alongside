@@ -61,6 +61,9 @@ jobs:
     needs: check
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    # Without this the job is labelled with every matrix value, service id and
+    # all, which reads as noise in the run list.
+    name: deploy ${{ matrix.setup }}
     strategy:
       # Both services build from the same commit and are independent, so a
       # failure in one should not cancel the other mid-deploy.
