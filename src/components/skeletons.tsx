@@ -113,6 +113,19 @@ export function WorkspaceHeaderSkeleton() {
   );
 }
 
+export function PeopleSkeleton({ rows = 4 }: { rows?: number }) {
+  return (
+    <div role="status" aria-label="Loading" className="flex flex-col gap-2.5">
+      {Array.from({ length: rows }, (_, index) => (
+        <div key={index} className="flex items-center gap-2.5">
+          <Skeleton className="size-6 shrink-0 rounded-full" />
+          <Skeleton className="h-2.5 flex-1" style={{ maxWidth: `${72 - index * 8}%` }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function BrandPulse({ label }: { label: string }) {
   return (
     <div
