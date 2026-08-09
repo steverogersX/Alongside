@@ -53,9 +53,9 @@ jobs:
       matrix:
         include:
           - setup: api
-            serviceId: ${{ vars.ZEROPS_API_SERVICE_ID }}
+            serviceId: ${{ vars.ZEROPS_API_SERVICE_ID || 'XSzKT5Y9T5GB5wT2HPvhFA' }}
           - setup: web
-            serviceId: ${{ vars.ZEROPS_WEB_SERVICE_ID }}
+            serviceId: ${{ vars.ZEROPS_WEB_SERVICE_ID || 'pzljds4TRfybA4ySPt1aaA' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -93,7 +93,7 @@ jobs:
             exit 1
           fi
         env:
-          PROJECT_ID: ${{ vars.ZEROPS_PROJECT_ID }}
+          PROJECT_ID: ${{ vars.ZEROPS_PROJECT_ID || 'KAfoAvH6SmquqF21xMafZg' }}
           SERVICE_ID: ${{ matrix.serviceId }}
           SETUP: ${{ matrix.setup }}
 
@@ -101,7 +101,7 @@ jobs:
         run: |
           zcli push             --projectId "$PROJECT_ID"             --setup "${{ matrix.setup }}"             --serviceId "$SERVICE_ID"
         env:
-          PROJECT_ID: ${{ vars.ZEROPS_PROJECT_ID }}
+          PROJECT_ID: ${{ vars.ZEROPS_PROJECT_ID || 'KAfoAvH6SmquqF21xMafZg' }}
           SERVICE_ID: ${{ matrix.serviceId }}
 
   smoke:
@@ -119,7 +119,7 @@ jobs:
           echo "API did not come back healthy"
           exit 1
         env:
-          API_URL: ${{ vars.ZEROPS_API_URL }}
+          API_URL: ${{ vars.ZEROPS_API_URL || 'https://api-2b3f-4000.prg1.zerops.app' }}
 
       - name: Web is serving
         run: |
@@ -127,4 +127,4 @@ jobs:
           echo "web -> $code"
           [ "$code" = "200" ]
         env:
-          WEB_URL: ${{ vars.ZEROPS_WEB_URL }}
+          WEB_URL: ${{ vars.ZEROPS_WEB_URL || 'https://web-2b3f-3000.prg1.zerops.app' }}
