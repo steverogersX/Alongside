@@ -68,7 +68,9 @@ zerops:
       readinessCheck:
         httpGet:
           port: 3000
-          path: /
+          # Not /, which redirects to the sign-in page when the request has no
+          # session — a readiness check reads that redirect as unhealthy.
+          path: /login
         failureTimeout: 90s
     run:
       base: nodejs@22

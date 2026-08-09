@@ -145,7 +145,9 @@ jobs:
 
       - name: Web is serving
         run: |
-          code=$(curl -s -o /dev/null -w "%{http_code}" "$WEB_URL")
+          # The root redirects to sign-in without a session, so ask for a page
+          # that renders either way.
+          code=$(curl -s -o /dev/null -w "%{http_code}" "$WEB_URL/login")
           echo "web -> $code"
           [ "$code" = "200" ]
         env:
