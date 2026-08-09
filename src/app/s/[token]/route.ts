@@ -2,38 +2,20 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
 
-export async function GET(
-  request: NextRequest,
+/**
+ * Hand the browser to the API rather than redeeming here. The session cookie
+ * has to be set by the host that will later be asked for the document — a
+ * cookie set on this app's host is never sent to the API's, so forwarding one
+ * through here leaves the guest unauthenticated.
+ *
+ * request.url is also the internal address behind a proxy, so building the
+ * next hop from it is how a shared link ends up pointing at localhost.
+ */
+export function GET(
+  _request: NextRequest,
   context: { params: Promise<{ token: string }> }
 ) {
-  const { token } = await context.params;
-
-  const response = await fetch(`${API}/links/${token}/redeem`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: "{}",
-    cache: "no-store",
-  });
-
-  const payload = (await response.json().catch(() => null)) as
-    | { success: true; data: { documentId: string } }
-    | { success: false; error: { message: string } }
-    | null;
-
-  if (!payload?.success) {
-    const message = payload?.success === false ? payload.error.message : "";
-    const url = new URL("/link-unavailable", request.url);
-    if (message) url.searchParams.set("reason", message);
-    return NextResponse.redirect(url);
-  }
-
-  const redirect = NextResponse.redirect(
-    new URL(`/d/${payload.data.documentId}`, request.url)
+  return context.params.then(({ token }) =>
+    NextResponse.redirect(`${API}/links/${token}/open`, 307)
   );
-
-  for (const cookie of response.headers.getSetCookie()) {
-    redirect.headers.append("set-cookie", cookie);
-  }
-
-  return redirect;
 }

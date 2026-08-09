@@ -24,3 +24,9 @@ export const tokenParams = z.object({
 });
 
 export type CreateLinkInput = z.infer<typeof createLinkSchema>;
+
+/**
+ * Anything at all: a person following a mistyped link should land on a page
+ * that explains itself, not on a JSON validation error.
+ */
+export const openParams = z.object({ token: z.string() });
