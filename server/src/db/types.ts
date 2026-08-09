@@ -1,4 +1,5 @@
 import type {
+  agentConnections,
   agentRuns,
   chatMessages,
   documentLinks,
@@ -21,6 +22,7 @@ export type Document = typeof documents.$inferSelect;
 export type Grant = typeof grants.$inferSelect;
 export type DocumentLink = typeof documentLinks.$inferSelect;
 export type AgentRun = typeof agentRuns.$inferSelect;
+export type AgentConnection = typeof agentConnections.$inferSelect;
 export type ChatMessage = typeof chatMessages.$inferSelect;
 
 export type Role = (typeof roleName.enumValues)[number];
