@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { PeopleSkeleton } from "@/components/skeletons";
 import { AddAgentFlow } from "@/components/workspace/add-agent-flow";
-import { personAvatar } from "@/lib/avatars";
+import { AgentAvatar } from "@/components/workspace/agent-avatar";
 import { useRemoveAgent, useWorkspace } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
@@ -59,12 +59,10 @@ export function AgentsDialog({
           <ul className="flex flex-col divide-y divide-border/60">
             {agents.map((row) => (
               <li key={row.user.id} className="flex items-center gap-2.5 py-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={personAvatar(row.user.avatarSeed, "agent", 48)}
-                  alt=""
-                  aria-hidden
-                  className="size-7 shrink-0 rounded-md ring-1 ring-agent/25 select-none"
+                <AgentAvatar
+                  provider={row.user.provider}
+                  seed={row.user.avatarSeed}
+                  className="size-7"
                 />
 
                 <span className="min-w-0 flex-1">

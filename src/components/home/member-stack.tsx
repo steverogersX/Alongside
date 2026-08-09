@@ -4,6 +4,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { AgentAvatar } from "@/components/workspace/agent-avatar";
 import { personAvatar } from "@/lib/avatars";
 import type { Member } from "@/lib/types";
 
@@ -25,16 +26,23 @@ export function MemberStack({
         <Tooltip key={member.id}>
           <TooltipTrigger asChild>
             <span className="relative -mr-1.5 inline-flex">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={personAvatar(member.avatarSeed, member.kind, 48)}
-                alt={member.displayName}
-                className={cn(
-                  "size-6 ring-2 select-none",
-                  ringClass,
-                  member.kind === "bot" ? "rounded-md" : "rounded-full"
-                )}
-              />
+              {member.kind === "bot" ? (
+                <AgentAvatar
+                  provider={member.provider}
+                  seed={member.avatarSeed}
+                  className={cn("size-6 ring-2", ringClass)}
+                />
+              ) : (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={personAvatar(member.avatarSeed, member.kind, 48)}
+                  alt={member.displayName}
+                  className={cn(
+                    "size-6 rounded-full ring-2 select-none",
+                    ringClass
+                  )}
+                />
+              )}
             </span>
           </TooltipTrigger>
           <TooltipContent>

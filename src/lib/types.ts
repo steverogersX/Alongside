@@ -9,6 +9,7 @@ export type Member = {
   isOrgAdmin: boolean;
   email: string | null;
   model: string | null;
+  provider: string | null;
 };
 
 export type Workspace = {

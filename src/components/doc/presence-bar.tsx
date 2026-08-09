@@ -5,6 +5,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { AgentAvatar } from "@/components/workspace/agent-avatar";
 import { personAvatar } from "@/lib/avatars";
 import type { AwarenessViewer } from "@/lib/use-awareness";
 import { cn } from "@/lib/utils";
@@ -30,29 +31,30 @@ export function PresenceBar({
           <Tooltip key={viewer.key}>
             <TooltipTrigger asChild>
               <span className="relative -mr-2 inline-flex cursor-pointer transition-transform last:mr-0 hover:z-10 hover:-translate-y-0.5">
-                <span
-                  className={cn(
-                    "grid size-7 place-items-center overflow-hidden ring-2",
-                    ringClass,
-                    viewer.kind === "agent"
-                      ? "rounded-lg bg-secondary"
-                      : "rounded-full bg-secondary",
-                    viewer.kind === "guest" &&
-                      "bg-muted outline-1 -outline-offset-1 outline-dashed outline-border"
-                  )}
-                  style={{ boxShadow: `inset 0 0 0 1.5px ${viewer.color}` }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={personAvatar(
-                      viewer.avatarSeed,
-                      viewer.kind === "agent" ? "agent" : "human",
-                      64
-                    )}
-                    alt={viewer.name}
-                    className="size-full select-none"
+                {viewer.kind === "agent" ? (
+                  <AgentAvatar
+                    provider={viewer.provider}
+                    seed={viewer.avatarSeed}
+                    className={cn("size-7 rounded-lg ring-2", ringClass)}
                   />
-                </span>
+                ) : (
+                  <span
+                    className={cn(
+                      "grid size-7 place-items-center overflow-hidden rounded-full bg-secondary ring-2",
+                      ringClass,
+                      viewer.kind === "guest" &&
+                        "bg-muted outline-1 -outline-offset-1 outline-dashed outline-border"
+                    )}
+                    style={{ boxShadow: `inset 0 0 0 1.5px ${viewer.color}` }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={personAvatar(viewer.avatarSeed, "human", 64)}
+                      alt={viewer.name}
+                      className="size-full select-none"
+                    />
+                  </span>
+                )}
 
                 {viewer.kind === "agent" && (
                   <span

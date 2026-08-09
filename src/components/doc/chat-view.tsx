@@ -12,6 +12,7 @@ import {
   ReactionChips,
   type ChatReaction,
 } from "@/components/doc/message-reactions";
+import { AgentAvatar } from "@/components/workspace/agent-avatar";
 import { personAvatar } from "@/lib/avatars";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ export type ChatAuthor = {
   avatarSeed: string;
   kind: "human" | "bot" | "guest";
   model?: string | null;
+  provider?: string | null;
 };
 
 export type ChatEntry = {
@@ -126,28 +128,34 @@ export function ChatView({
                 >
                   {!mine && (
                     <span className="w-6 shrink-0">
-                      {!grouped && (
-                        <span
-                          className={cn(
-                            "mt-4 grid size-6 place-items-center overflow-hidden bg-secondary",
-                            isAgent ? "rounded-md" : "rounded-full",
-                            isGuest &&
-                              "bg-muted outline-1 -outline-offset-1 outline-dashed outline-border"
-                          )}
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={personAvatar(
-                              message.author.avatarSeed,
-                              isAgent ? "agent" : "human",
-                              56
-                            )}
-                            alt=""
-                            aria-hidden
-                            className="size-full select-none"
+                      {!grouped &&
+                        (isAgent ? (
+                          <AgentAvatar
+                            provider={message.author.provider}
+                            seed={message.author.avatarSeed}
+                            className="mt-4 size-6"
                           />
-                        </span>
-                      )}
+                        ) : (
+                          <span
+                            className={cn(
+                              "mt-4 grid size-6 place-items-center overflow-hidden rounded-full bg-secondary",
+                              isGuest &&
+                                "bg-muted outline-1 -outline-offset-1 outline-dashed outline-border"
+                            )}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={personAvatar(
+                                message.author.avatarSeed,
+                                "human",
+                                56
+                              )}
+                              alt=""
+                              aria-hidden
+                              className="size-full select-none"
+                            />
+                          </span>
+                        ))}
                     </span>
                   )}
 
@@ -212,10 +220,10 @@ export function ChatView({
                             <span
                               key={at}
                               className={cn(
-                                "rounded px-0.5 font-medium",
+                                "rounded-[3px] px-1 py-px font-medium",
                                 mine
-                                  ? "bg-primary-foreground/20"
-                                  : "bg-agent/15 text-agent"
+                                  ? "bg-primary-foreground/15 text-primary-foreground"
+                                  : "bg-agent/12 text-agent dark:bg-agent/20"
                               )}
                             >
                               {part.text}

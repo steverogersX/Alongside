@@ -1,5 +1,6 @@
 "use client";
 
+import { AgentAvatar } from "@/components/workspace/agent-avatar";
 import { personAvatar } from "@/lib/avatars";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +11,7 @@ export type Mentionable = {
   avatarSeed: string;
   kind: "agent" | "human";
   model?: string | null;
+  provider?: string | null;
   disabledReason?: string;
 };
 
@@ -66,22 +68,21 @@ export function MentionMenu({
               index === active && !item.disabledReason && "bg-accent"
             )}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={personAvatar(
-                item.avatarSeed,
-                item.kind === "agent" ? "agent" : "human",
-                48
-              )}
-              alt=""
-              aria-hidden
-              className={cn(
-                "size-5 shrink-0 select-none",
-                item.kind === "agent"
-                  ? "rounded ring-1 ring-agent/25"
-                  : "rounded-full"
-              )}
-            />
+            {item.kind === "agent" ? (
+              <AgentAvatar
+                provider={item.provider}
+                seed={item.avatarSeed}
+                className="size-5 rounded"
+              />
+            ) : (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={personAvatar(item.avatarSeed, "human", 48)}
+                alt=""
+                aria-hidden
+                className="size-5 shrink-0 rounded-full select-none"
+              />
+            )}
 
             <span className="min-w-0 flex-1">
               <span

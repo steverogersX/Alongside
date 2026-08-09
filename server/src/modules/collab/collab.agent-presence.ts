@@ -40,6 +40,7 @@ export const agentPresence = {
         avatarSeed: agent.avatarSeed,
         kind: "agent",
         forName: invoker.displayName,
+        provider: agent.provider,
       },
     });
   },

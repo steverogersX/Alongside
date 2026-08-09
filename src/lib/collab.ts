@@ -22,6 +22,7 @@ export type AwarenessUser = {
   color: string;
   kind: CollabIdentity["kind"];
   forName?: string;
+  provider?: string | null;
 };
 
 const HTTP_BASE =

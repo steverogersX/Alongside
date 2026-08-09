@@ -19,6 +19,7 @@ import {
   RowsSkeleton,
   WorkspaceHeaderSkeleton,
 } from "@/components/skeletons";
+import { AgentAvatar } from "@/components/workspace/agent-avatar";
 import { personAvatar } from "@/lib/avatars";
 import { useCreateDocument, useWorkspace } from "@/lib/queries";
 
@@ -314,12 +315,10 @@ function Rail({ id }: { id: string }) {
         ) : (
           agents.map((row) => (
             <div key={row.user.id} className="flex items-center gap-2.5">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={personAvatar(row.user.avatarSeed, "agent", 48)}
-                alt=""
-                aria-hidden
-                className="size-6 shrink-0 rounded-md ring-1 ring-agent/25 select-none"
+              <AgentAvatar
+                provider={row.user.provider}
+                seed={row.user.avatarSeed}
+                className="size-6"
               />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[12.5px] font-medium">
