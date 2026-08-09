@@ -6,6 +6,7 @@ import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCaret from "@tiptap/extension-collaboration-caret";
+import { FontFamily, TextStyle } from "@tiptap/extension-text-style";
 import {
   Bold,
   Code,
@@ -20,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ClaimedParagraph } from "@/components/doc/claimed-paragraph";
+import { DOC_FONTS, FontPicker } from "@/components/doc/font-picker";
 import type { CollabSession } from "@/lib/collab";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +46,8 @@ export function CollabEditor({
         // History lives in the CRDT — the local undo stack would fight it.
         StarterKit.configure({ paragraph: false, undoRedo: false }),
         ClaimedParagraph,
+        TextStyle,
+        FontFamily,
         Collaboration.configure({ document: doc }),
         // The extension owns the awareness "user" field and overwrites it with
         // exactly this object, so the presence bar's fields have to live here.
@@ -87,6 +91,9 @@ export function CollabEditor({
       bullet: instance?.isActive("bulletList") ?? false,
       ordered: instance?.isActive("orderedList") ?? false,
       quote: instance?.isActive("blockquote") ?? false,
+      fontFamily:
+        (instance?.getAttributes("textStyle").fontFamily as string | undefined) ??
+        "",
       words:
         instance?.getText().trim().split(/\s+/).filter(Boolean).length ?? 0,
     }),
@@ -122,6 +129,16 @@ export function CollabEditor({
               <tool.icon />
             </Button>
           ))}
+
+          <Separator orientation="vertical" className="mx-1 h-4" />
+
+          <FontPicker
+            editor={editor}
+            activeFontId={
+              DOC_FONTS.find((font) => font.stack === state?.fontFamily)?.id ??
+              "default"
+            }
+          />
 
           <Separator orientation="vertical" className="mx-1 h-4" />
 
