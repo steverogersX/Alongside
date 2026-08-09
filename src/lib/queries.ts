@@ -71,12 +71,12 @@ export function useDocument(id: string) {
   });
 }
 
-export function useChat(documentId: string) {
+export function useChat(documentId: string, enabled = true) {
   return useQuery({
     queryKey: keys.chat(documentId),
     queryFn: () =>
       api<{ messages: ChatMessage[] }>(`/documents/${documentId}/chat`),
-    enabled: Boolean(documentId),
+    enabled: Boolean(documentId) && enabled,
   });
 }
 
