@@ -54,22 +54,51 @@ export const runRepository = {
   },
 
   /**
-   * SKIP LOCKED means two executors racing for the same run cannot both win —
-   * the loser sees the row as taken and moves on instead of blocking.
+   * One run per document at a time: the same agent asked by three people would
+   * otherwise race itself, and each edit would invalidate the others' anchors.
+   * SKIP LOCKED keeps two workers from claiming the same row.
    */
-  async claim(runId: string, connectionId: string) {
-    const [run] = await db.execute<{ id: string }>(
-      sql`update ${agentRuns} set status = 'running', connection_id = ${connectionId},
-            claimed_at = now(), attempts = ${agentRuns.attempts} + 1
-          where id = (
-            select id from ${agentRuns}
-            where id = ${runId} and status = 'queued'
-            for update skip locked
+  async claimNext() {
+    const claimed = await db.execute<{ id: string }>(sql`
+      update agent_runs set
+        status = 'running',
+        claimed_at = now(),
+        attempts = attempts + 1
+      where id = (
+        select r.id from agent_runs r
+        where r.status = 'queued'
+          and not exists (
+            select 1 from agent_runs busy
+            where busy.document_id = r.document_id
+              and busy.status = 'running'
           )
-          returning id`
-    ).then((result) => result.rows);
+        order by r.created_at
+        limit 1
+        for update skip locked
+      )
+      returning id
+    `);
 
-    return run ? this.find(runId) : null;
+    const id = claimed.rows[0]?.id;
+    return id ? this.find(id) : null;
+  },
+
+  async claim(runId: string, connectionId: string) {
+    const claimed = await db.execute<{ id: string }>(sql`
+      update agent_runs set
+        status = 'running',
+        connection_id = ${connectionId},
+        claimed_at = now(),
+        attempts = attempts + 1
+      where id = (
+        select id from agent_runs
+        where id = ${runId} and status = 'queued'
+        for update skip locked
+      )
+      returning id
+    `);
+
+    return claimed.rows[0] ? this.find(runId) : null;
   },
 
   async queuedForUser(userId: string, limit: number) {
