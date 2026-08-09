@@ -68,6 +68,9 @@ jobs:
       # Both services build from the same commit and are independent, so a
       # failure in one should not cancel the other mid-deploy.
       fail-fast: false
+      # One at a time: two build containers at once outgrow a light project,
+      # and the loser fails ten minutes in with nothing useful in the log.
+      max-parallel: 1
       matrix:
         include:
           - setup: api
