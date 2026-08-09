@@ -1,12 +1,15 @@
 import {
   createCipheriv,
   createDecipheriv,
+  createHash,
   randomBytes,
 } from "node:crypto";
 
 import { env } from "@/config/env.ts";
 
-const key = Buffer.from(env.CREDENTIALS_KEY, "hex");
+// Derived rather than parsed: a host that generates the secret for us decides
+// its own alphabet, and a hex-only key would silently produce a short buffer.
+const key = createHash("sha256").update(env.CREDENTIALS_KEY).digest();
 
 /**
  * Stored as one string so a credential can never be half-written: iv, auth tag

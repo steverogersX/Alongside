@@ -1,0 +1,78 @@
+zerops:
+  - setup: api
+    build:
+      base: nodejs@22
+      buildCommands:
+        - cd server && npm ci
+        - cd server && npm run build
+      deployFiles:
+        - server/dist
+        - server/drizzle
+        - server/drizzle.config.ts
+        - server/package.json
+        - server/node_modules
+      cache:
+        - server/node_modules
+    deploy:
+      readinessCheck:
+        httpGet:
+          port: 4000
+          path: /api/health
+        failureTimeout: 90
+    run:
+      base: nodejs@22
+      ports:
+        - port: 4000
+          httpSupport: true
+      # Migrations run before the process starts, so a deploy that changes the
+      # schema can never serve traffic against the old one.
+      initCommands:
+        - cd server && npx drizzle-kit migrate
+      start: node server/dist/index.js
+      healthCheck:
+        httpGet:
+          port: 4000
+          path: /api/health
+        execPeriod: 30
+      envVariables:
+        NODE_ENV: production
+        PORT: 4000
+        DATABASE_URL: ${db_connectionString}
+        SESSION_SECRET: ${SESSION_SECRET}
+        CREDENTIALS_KEY: ${CREDENTIALS_KEY}
+        API_ORIGIN: ${zeropsSubdomain}
+        CORS_ORIGIN: ${web_zeropsSubdomain}
+
+  - setup: web
+    build:
+      base: nodejs@22
+      buildCommands:
+        - npm ci
+        - npm run build
+      deployFiles:
+        - .next
+        - public
+        - next.config.ts
+        - package.json
+        - node_modules
+      cache:
+        - node_modules
+        - .next/cache
+      envVariables:
+        # Next inlines NEXT_PUBLIC_* at build time, so this has to be set here
+        # rather than at run time.
+        NEXT_PUBLIC_API_URL: ${api_zeropsSubdomain}/api
+    deploy:
+      readinessCheck:
+        httpGet:
+          port: 3000
+          path: /
+        failureTimeout: 90
+    run:
+      base: nodejs@22
+      ports:
+        - port: 3000
+          httpSupport: true
+      start: npx next start -p 3000
+      envVariables:
+        NODE_ENV: production

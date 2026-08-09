@@ -1,0 +1,30 @@
+project:
+  name: alongside
+  tags:
+    - alongside
+
+services:
+  - hostname: db
+    type: postgresql@17
+    mode: NON_HA
+    priority: 10
+
+  - hostname: api
+    type: nodejs@22
+    enableSubdomainAccess: true
+    # Documents live in this process's memory between debounced saves, so a
+    # second container would hold a second copy of the same room and the two
+    # would never merge. Pinned to one until Redis fan-out is in place.
+    minContainers: 1
+    maxContainers: 1
+    envSecrets:
+      SESSION_SECRET: <@generateRandomString(<64>)>
+      # Any string of 32+ characters; the server derives a 32-byte key from it.
+      # Changing it makes every stored provider key undecryptable.
+      CREDENTIALS_KEY: <@generateRandomString(<64>)>
+
+  - hostname: web
+    type: nodejs@22
+    enableSubdomainAccess: true
+    minContainers: 1
+    maxContainers: 2
