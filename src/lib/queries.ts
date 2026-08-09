@@ -73,12 +73,13 @@ export function useDocument(id: string) {
   });
 }
 
-export function useChat(documentId: string, enabled = true) {
+export function useChat(documentId: string, enabled = true, poll = false) {
   return useQuery({
     queryKey: keys.chat(documentId),
     queryFn: () =>
       api<{ messages: ChatMessage[] }>(`/documents/${documentId}/chat`),
     enabled: Boolean(documentId) && enabled,
+    refetchInterval: poll ? 2000 : false,
   });
 }
 
@@ -94,11 +95,12 @@ export function useChatAccess(documentId: string) {
   });
 }
 
-export function useRuns(documentId: string) {
+export function useRuns(documentId: string, poll = false) {
   return useQuery({
     queryKey: keys.runs(documentId),
     queryFn: () => api<{ runs: AgentRun[] }>(`/documents/${documentId}/runs`),
     enabled: Boolean(documentId),
+    refetchInterval: poll ? 2000 : false,
   });
 }
 

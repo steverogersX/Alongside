@@ -34,8 +34,19 @@ export function DocChat({ documentId }: { documentId: string }) {
   const level = access.data?.chat ?? "none";
   const viewerId = access.data?.viewerId ?? null;
 
-  const chat = useChat(documentId, access.data !== undefined && level !== "none");
-  const runs = useRuns(documentId);
+  const runs = useRuns(documentId, true);
+
+  // While an agent is working the answer arrives without anyone typing, so the
+  // thread has to come to us.
+  const live = (runs.data?.runs ?? []).some(
+    (run) => run.status === "queued" || run.status === "running"
+  );
+
+  const chat = useChat(
+    documentId,
+    access.data !== undefined && level !== "none",
+    live
+  );
   const send = useSendMessage(documentId);
   const cancel = useCancelRun(documentId);
 
