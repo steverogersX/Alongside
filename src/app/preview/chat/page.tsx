@@ -31,6 +31,14 @@ const SEED: ChatEntry[] = [
       kind: "bot",
       model: "Opus 5",
     },
+    reactions: [
+      {
+        emoji: "🎯",
+        count: 2,
+        reactedByMe: false,
+        names: ["Sam Ortega", "Noor Haddad"],
+      },
+    ],
   },
   {
     id: "m3",
@@ -42,6 +50,10 @@ const SEED: ChatEntry[] = [
       avatarSeed: "u_noor",
       kind: "human",
     },
+    reactions: [
+      { emoji: "👍", count: 3, reactedByMe: true, names: ["Sam Ortega", "Isolated Badger"] },
+      { emoji: "🎉", count: 1, reactedByMe: false, names: ["Sam Ortega"] },
+    ],
   },
   {
     id: "m4",
@@ -101,6 +113,47 @@ export default function ChatPreviewPage() {
     ]);
   }
 
+  function toggleReaction(messageId: string, emoji: string) {
+    setMessages((previous) =>
+      previous.map((message) => {
+        if (message.id !== messageId) return message;
+
+        const reactions = message.reactions ?? [];
+        const existing = reactions.find((r) => r.emoji === emoji);
+
+        if (!existing) {
+          return {
+            ...message,
+            reactions: [
+              ...reactions,
+              { emoji, count: 1, reactedByMe: true, names: ["You"] },
+            ],
+          };
+        }
+
+        const count = existing.count + (existing.reactedByMe ? -1 : 1);
+
+        return {
+          ...message,
+          reactions: reactions
+            .map((r) =>
+              r.emoji === emoji
+                ? {
+                    ...r,
+                    count,
+                    reactedByMe: !r.reactedByMe,
+                    names: r.reactedByMe
+                      ? r.names.filter((n) => n !== "You")
+                      : [...r.names, "You"],
+                  }
+                : r
+            )
+            .filter((r) => r.count > 0),
+        };
+      })
+    );
+  }
+
   return (
     <TooltipProvider>
       <div className="flex min-h-svh flex-col items-center gap-6 overflow-y-auto p-8">
@@ -120,14 +173,14 @@ export default function ChatPreviewPage() {
             <div className="shrink-0 border-b border-border/70 px-4 py-2.5">
               <span className="eyebrow">Chat · rail width</span>
             </div>
-            <ChatView messages={messages} onSend={send} />
+            <ChatView messages={messages} onSend={send} onToggleReaction={toggleReaction} />
           </div>
 
           <div className="flex h-[34rem] min-w-80 flex-1 flex-col overflow-hidden rounded-2xl border border-sidebar-border bg-sidebar shadow-sm">
             <div className="shrink-0 border-b border-border/70 px-4 py-2.5">
               <span className="eyebrow">Chat · wide</span>
             </div>
-            <ChatView messages={messages} onSend={send} />
+            <ChatView messages={messages} onSend={send} onToggleReaction={toggleReaction} />
           </div>
         </div>
       </div>
