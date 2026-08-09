@@ -4,6 +4,7 @@ import { requireUser } from "@/middleware/auth.ts";
 import { chatController } from "@/modules/chat/chat.controller.ts";
 import { documentController } from "@/modules/documents/document.controller.ts";
 import { linkController } from "@/modules/links/link.controller.ts";
+import { presenceController } from "@/modules/presence/presence.controller.ts";
 import { runController } from "@/modules/runs/run.controller.ts";
 
 export const documentRoutes = Router();
@@ -11,6 +12,9 @@ export const documentRoutes = Router();
 documentRoutes.get("/:id", documentController.get);
 documentRoutes.patch("/:id", documentController.update);
 documentRoutes.get("/:id/role", documentController.role);
+
+documentRoutes.post("/:id/presence", presenceController.heartbeat);
+documentRoutes.post("/:id/presence/leave", presenceController.leave);
 
 documentRoutes.get("/:id/chat", requireUser, chatController.list);
 documentRoutes.post("/:id/chat", requireUser, chatController.post);
