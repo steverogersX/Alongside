@@ -1,5 +1,6 @@
 import type { AgentRun, User } from "@/db/types.ts";
 import { chatRepository } from "@/modules/chat/chat.repository.ts";
+import { agentPresence } from "@/modules/collab/collab.agent-presence.ts";
 import { collabDocument } from "@/modules/collab/collab.document.ts";
 import { documentRepository } from "@/modules/documents/document.repository.ts";
 import type { ToolSpec } from "@/modules/providers/provider.types.ts";
@@ -125,17 +126,20 @@ export async function runTool(
   }
 
   if (name === "replace_block") {
-    const result = await collabDocument.replaceBlock(
+    const index = Number(input.index);
+    await agentPresence.moveTo(run.documentId, index);
+
+    return collabDocument.replaceBlock(
       run.documentId,
-      Number(input.index),
+      index,
       String(input.text ?? ""),
       String(input.expect ?? "")
     );
-
-    return result;
   }
 
   if (name === "delete_block") {
+    await agentPresence.moveTo(run.documentId, Number(input.index));
+
     return collabDocument.deleteBlock(
       run.documentId,
       Number(input.index),
@@ -144,6 +148,8 @@ export async function runTool(
   }
 
   if (name === "insert_block") {
+    await agentPresence.moveTo(run.documentId, Number(input.after) + 1);
+
     return collabDocument.insertBlock(
       run.documentId,
       Number(input.after),

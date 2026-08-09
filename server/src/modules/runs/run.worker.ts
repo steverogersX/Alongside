@@ -5,6 +5,7 @@ import { db } from "@/db/client.ts";
 import { users } from "@/db/schema/index.ts";
 import type { AgentRun, User } from "@/db/types.ts";
 import { chatRepository } from "@/modules/chat/chat.repository.ts";
+import { agentPresence } from "@/modules/collab/collab.agent-presence.ts";
 import {
   adapterFor,
   baseUrlFor,
@@ -74,6 +75,8 @@ async function execute(run: AgentRun) {
 
   const turns: Turn[] = [{ role: "user", text: run.prompt }];
 
+  await agentPresence.join(run.documentId, agent, invoker);
+
   try {
     for (let step = 0; step < MAX_STEPS; step += 1) {
       if (Date.now() > deadline) {
@@ -137,6 +140,8 @@ async function execute(run: AgentRun) {
       error instanceof Error ? error.message : "Something went wrong.";
 
     await settle(run, agent, invoker, { status: "failed", message });
+  } finally {
+    await agentPresence.leave(run.documentId);
   }
 }
 
