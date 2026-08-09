@@ -17,6 +17,7 @@
     "@tanstack/react-query-devtools": "^5.101.4",
     "@tiptap/extension-collaboration": "^3.29.2",
     "@tiptap/extension-collaboration-caret": "^3.29.2",
+    "@tiptap/extension-text-style": "^3.29.2",
     "@tiptap/pm": "^3.29.2",
     "@tiptap/react": "^3.29.2",
     "@tiptap/starter-kit": "^3.29.2",
