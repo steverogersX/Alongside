@@ -9,6 +9,8 @@ import { runController } from "@/modules/runs/run.controller.ts";
 
 export const documentRoutes = Router();
 
+// Before /:id, or "recent" is read as a document id.
+documentRoutes.get("/recent", requireUser, documentController.recent);
 documentRoutes.get("/:id", documentController.get);
 documentRoutes.patch("/:id", documentController.update);
 documentRoutes.get("/:id/role", documentController.role);

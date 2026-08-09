@@ -26,7 +26,7 @@ export function FormField({
     <div className="flex flex-col gap-1.5">
       <label
         htmlFor={field.name}
-        className="text-[12.5px] font-medium text-foreground"
+        className="text-[13px] font-medium text-foreground"
       >
         {label}
       </label>
@@ -40,19 +40,19 @@ export function FormField({
         onBlur={field.handleBlur}
         aria-invalid={message ? true : undefined}
         aria-describedby={message ? `${field.name}-error` : undefined}
-        className={cn("h-9", props.className)}
+        className={cn(props.className)}
       />
 
       {message ? (
         <p
           id={`${field.name}-error`}
           role="alert"
-          className="text-[11.5px] text-destructive"
+          className="text-[12px] text-destructive"
         >
           {message}
         </p>
       ) : hint ? (
-        <p className="text-[11.5px] text-muted-foreground">{hint}</p>
+        <p className="text-[12px] text-muted-foreground">{hint}</p>
       ) : null}
     </div>
   );

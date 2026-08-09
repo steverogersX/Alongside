@@ -2,10 +2,19 @@ import { accessService } from "@/modules/access/access.service.ts";
 import { documentService } from "@/modules/documents/document.service.ts";
 import { updateDocumentSchema } from "@/modules/documents/document.schema.ts";
 import { ok } from "@/shared/response.ts";
-import { publicRoute } from "@/shared/route.ts";
-import { idParams, noQuery } from "@/shared/validation.ts";
+import { publicRoute, route } from "@/shared/route.ts";
+import {
+  idParams,
+  noQuery,
+  paginationQuery,
+} from "@/shared/validation.ts";
 
 export const documentController = {
+  recent: route({ query: paginationQuery }, async ({ query, user, res }) => {
+    const documents = await documentService.recent(user, query.limit);
+    ok(res, { documents }, { count: documents.length });
+  }),
+
   get: publicRoute(
     { params: idParams, query: noQuery },
     async ({ params, req, res }) => {

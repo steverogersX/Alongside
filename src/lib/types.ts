@@ -105,3 +105,12 @@ export type Connection = {
   revokedAt: string | null;
   createdAt: string;
 };
+
+export type RecentDocument = {
+  id: string;
+  title: string;
+  status: DocumentSummary["status"];
+  updatedAt: string;
+  workspaceId: string;
+  workspaceName: string;
+};

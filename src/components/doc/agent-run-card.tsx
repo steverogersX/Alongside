@@ -41,18 +41,18 @@ export function AgentRunCard({
   return (
     <div
       className={cn(
-        "rounded-lg border border-l-2 border-border bg-card p-2.5",
-        failed ? "border-l-destructive" : "border-l-agent"
+        "rounded-lg border border-border border-l-2 bg-agent-muted/35 p-3",
+        failed ? "border-l-destructive bg-destructive/5" : "border-l-agent"
       )}
     >
       <div className="flex items-center gap-2">
         <AgentAvatar
           provider={run.provider}
           seed={run.avatarSeed}
-          className="size-5 rounded"
+          className="size-5 rounded-[4px]"
         />
 
-        <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-agent">
+        <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-agent">
           {run.agentName}
         </span>
 
@@ -73,12 +73,12 @@ export function AgentRunCard({
         )}
       </div>
 
-      <p className="mt-1.5 line-clamp-2 text-[11.5px] leading-snug text-muted-foreground">
+      <p className="mt-2 line-clamp-2 text-[12.5px] leading-snug text-muted-foreground">
         {run.prompt}
       </p>
 
       {run.status === "queued" && (
-        <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
+        <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
           {run.waitingOn
             ? `Waiting for ${run.waitingOn}.`
             : "Waiting to be picked up."}
@@ -86,18 +86,18 @@ export function AgentRunCard({
       )}
 
       {run.summary && (
-        <p className="mt-2 text-[12.5px] leading-relaxed">{run.summary}</p>
+        <p className="mt-2.5 text-[13px] leading-relaxed">{run.summary}</p>
       )}
 
       {run.error && (
-        <p className="mt-2 text-[12px] leading-relaxed text-destructive">
+        <p className="mt-2.5 text-[12.5px] leading-relaxed text-destructive">
           {run.error}
         </p>
       )}
 
-      <p className="mt-2 truncate text-[10.5px] text-muted-foreground/80">
+      <p className="datum mt-3 truncate text-muted-foreground/80">
         asked by {run.isYours ? "you" : run.invokedBy}
-        {run.model && <span className="font-mono"> · {run.model}</span>}
+        {run.model && <span> / {run.model}</span>}
       </p>
     </div>
   );
@@ -105,7 +105,7 @@ export function AgentRunCard({
 
 function StatusPill({ run }: { run: RunView }) {
   const base =
-    "flex h-4.5 shrink-0 items-center gap-1 rounded-full px-1.5 text-[10px] font-medium";
+    "flex h-5 shrink-0 items-center gap-1 rounded-[4px] px-1.5 font-mono text-[10px] font-medium tracking-[0.07em] uppercase";
 
   if (run.status === "queued") {
     return (
@@ -118,7 +118,7 @@ function StatusPill({ run }: { run: RunView }) {
 
   if (run.status === "running") {
     return (
-      <span className={cn(base, "bg-agent/12 text-agent dark:bg-agent/20")}>
+      <span className={cn(base, "bg-agent/15 text-agent dark:bg-agent/25")}>
         <span className="animate-agent-pulse size-1.5 rounded-full bg-current" />
         Working
         {run.startedAt && (

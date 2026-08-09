@@ -17,6 +17,7 @@ import type {
   DocumentSummary,
   LinkSession,
   Member,
+  RecentDocument,
   Role,
   Workspace,
   WorkspaceDetail,
@@ -31,6 +32,7 @@ export const keys = {
   chat: (id: string) => ["chat", id] as const,
   chatAccess: (id: string) => ["chat-access", id] as const,
   runs: (id: string) => ["runs", id] as const,
+  recent: ["recent-documents"] as const,
   links: (id: string) => ["links", id] as const,
   connections: ["connections"] as const,
   linkSession: ["link-session"] as const,
@@ -105,6 +107,15 @@ export function useRuns(documentId: string, poll = false) {
     queryFn: () => api<{ runs: AgentRun[] }>(`/documents/${documentId}/runs`),
     enabled: Boolean(documentId),
     refetchInterval: poll ? 2000 : false,
+  });
+}
+
+export function useRecentDocuments(limit = 6) {
+  return useQuery({
+    queryKey: keys.recent,
+    queryFn: () =>
+      api<{ documents: RecentDocument[] }>(`/documents/recent?limit=${limit}`),
+    staleTime: 30_000,
   });
 }
 

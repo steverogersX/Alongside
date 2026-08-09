@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 export function PresenceBar({
   viewers,
   max = 5,
-  ringClass = "ring-sidebar",
+  ringClass = "ring-card",
 }: {
   viewers: AwarenessViewer[];
   max?: number;
@@ -35,7 +35,7 @@ export function PresenceBar({
                   <AgentAvatar
                     provider={viewer.provider}
                     seed={viewer.avatarSeed}
-                    className={cn("size-7 rounded-lg ring-2", ringClass)}
+                    className={cn("size-7 rounded-md ring-2", ringClass)}
                   />
                 ) : (
                   <span
@@ -97,7 +97,7 @@ export function PresenceBar({
         )}
       </div>
 
-      <span className="hidden text-[11.5px] whitespace-nowrap text-muted-foreground sm:inline">
+      <span className="datum hidden whitespace-nowrap text-muted-foreground sm:inline">
         {summary(viewers)}
       </span>
     </div>

@@ -82,7 +82,7 @@ export function ChatView({
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div
           className={cn(
-            "flex min-h-full flex-col px-3 py-3",
+            "flex min-h-full flex-col px-4 py-4",
             isEmpty ? "justify-center" : "justify-end"
           )}
         >
@@ -174,28 +174,31 @@ export function ChatView({
                       >
                         <span
                           className={cn(
-                            "truncate text-[11.5px] font-medium",
-                            isAgent ? "text-agent" : "text-muted-foreground"
+                            "truncate text-[12px] font-semibold tracking-[-0.005em]",
+                            isAgent ? "text-agent" : "text-foreground"
                           )}
                         >
                           {mine ? "You" : message.author.displayName}
                         </span>
 
                         {isAgent && message.author.model && (
-                          <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
+                          <span className="datum shrink-0 text-muted-foreground">
                             {message.author.model}
                           </span>
                         )}
 
                         {isGuest && (
-                          <span className="shrink-0 rounded bg-secondary px-1 text-[9.5px] tracking-wide text-muted-foreground uppercase">
+                          <span className="shrink-0 rounded-[3px] bg-secondary px-1 font-mono text-[9.5px] tracking-[0.08em] text-muted-foreground uppercase">
                             guest
                           </span>
                         )}
 
-                        <span className="shrink-0 text-[10.5px] text-muted-foreground/70">
+                        <time
+                          dateTime={message.createdAt}
+                          className="datum shrink-0 text-muted-foreground/70"
+                        >
                           {time(message.createdAt)}
-                        </span>
+                        </time>
                       </div>
                     )}
 
@@ -207,12 +210,14 @@ export function ChatView({
                     >
                       <p
                         className={cn(
-                          "min-w-0 px-3 py-1.5 text-[13px] leading-[1.5] break-words whitespace-pre-wrap",
+                          "min-w-0 px-3 py-2 text-[13.5px] leading-[1.55] break-words whitespace-pre-wrap",
                           mine
-                            ? "rounded-2xl rounded-br-md bg-primary text-primary-foreground"
-                            : "rounded-2xl rounded-bl-md bg-secondary text-foreground",
+                            ? "rounded-lg rounded-br-[3px] bg-primary text-primary-foreground"
+                            : "rounded-lg rounded-bl-[3px] bg-secondary text-foreground",
+                          /* An agent's words carry its own mark down the edge,
+                             the same copper it leaves in the document. */
                           isAgent &&
-                            "bg-agent/10 text-foreground ring-1 ring-agent/20"
+                            "border-l-2 border-agent bg-agent-muted/60 pl-2.5 text-foreground"
                         )}
                       >
                         {splitMentions(message.body, names).map((part, at) =>
@@ -220,10 +225,10 @@ export function ChatView({
                             <span
                               key={at}
                               className={cn(
-                                "rounded-[3px] px-1 py-px font-medium",
+                                "rounded-[3px] px-1 py-px font-semibold",
                                 mine
-                                  ? "bg-primary-foreground/15 text-primary-foreground"
-                                  : "bg-agent/12 text-agent dark:bg-agent/20"
+                                  ? "bg-primary-foreground/20 text-primary-foreground"
+                                  : "bg-agent/15 text-agent dark:bg-agent/25"
                               )}
                             >
                               {part.text}

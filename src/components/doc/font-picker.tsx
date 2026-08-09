@@ -38,9 +38,9 @@ export const DOC_FONTS: DocFont[] = [
     stack: "var(--font-newsreader), ui-serif, Georgia, serif",
   },
   {
-    id: "inter",
-    label: "Inter",
-    stack: "var(--font-inter), ui-sans-serif, system-ui, sans-serif",
+    id: "archivo",
+    label: "Archivo",
+    stack: "var(--font-archivo), ui-sans-serif, system-ui, sans-serif",
   },
   {
     id: "mono",

@@ -170,14 +170,14 @@ export default function ChatPreviewPage() {
         </div>
 
         <div className="flex w-full max-w-5xl flex-wrap items-start gap-6">
-          <div className="flex h-[34rem] w-80 shrink-0 flex-col overflow-hidden rounded-2xl border border-sidebar-border bg-sidebar shadow-sm">
+          <div className="flex h-[34rem] w-80 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
             <div className="shrink-0 border-b border-border/70 px-4 py-2.5">
               <span className="eyebrow">Chat · rail width</span>
             </div>
             <ChatView messages={messages} onSend={send} onToggleReaction={toggleReaction} />
           </div>
 
-          <div className="flex h-[34rem] min-w-80 flex-1 flex-col overflow-hidden rounded-2xl border border-sidebar-border bg-sidebar shadow-sm">
+          <div className="flex h-[34rem] min-w-80 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
             <div className="shrink-0 border-b border-border/70 px-4 py-2.5">
               <span className="eyebrow">Chat · wide</span>
             </div>
@@ -197,7 +197,7 @@ export default function ChatPreviewPage() {
             ).map((state) => (
               <div
                 key={state.label}
-                className="flex h-72 w-72 flex-col overflow-hidden rounded-2xl border border-sidebar-border bg-sidebar shadow-sm"
+                className="flex h-72 w-72 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm"
               >
                 <div className="shrink-0 border-b border-border/70 px-4 py-2.5">
                   <span className="eyebrow">{state.label}</span>
@@ -215,7 +215,7 @@ export default function ChatPreviewPage() {
               </div>
             ))}
 
-            <div className="flex h-72 w-72 flex-col overflow-hidden rounded-2xl border border-sidebar-border bg-sidebar shadow-sm">
+            <div className="flex h-72 w-72 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
               <div className="shrink-0 border-b border-border/70 px-4 py-2.5">
                 <span className="eyebrow">No access</span>
               </div>

@@ -14,7 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const FIELD =
-  "px-1.5 py-1 text-[12.5px] leading-[1.5] whitespace-pre-wrap break-words";
+  "px-1.5 py-1 text-[13.5px] leading-[1.55] whitespace-pre-wrap break-words";
 
 export function ChatComposer({
   sending = false,
@@ -78,9 +78,9 @@ export function ChatComposer({
   }
 
   return (
-    <div className="relative shrink-0 p-2.5">
+    <div className="relative shrink-0 border-t border-border/70 p-3">
       {mention && matches.length > 0 && (
-        <div className="absolute inset-x-2.5 bottom-full">
+        <div className="absolute inset-x-3 bottom-full">
           <MentionMenu
             items={matches}
             active={active}
@@ -91,7 +91,7 @@ export function ChatComposer({
       )}
 
       <form
-        className="flex items-end gap-2 rounded-xl border border-border bg-card p-1.5 transition-colors focus-within:border-foreground/25"
+        className="flex items-end gap-2 rounded-lg border border-input bg-background p-2 shadow-xs transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/20"
         onSubmit={(event) => {
           event.preventDefault();
           submit();
@@ -105,7 +105,7 @@ export function ChatComposer({
               part.isMention ? (
                 <span
                   key={index}
-                  className="rounded bg-agent/15 font-medium text-agent"
+                  className="rounded-[3px] bg-agent/15 font-semibold text-agent"
                 >
                   {part.text}
                 </span>
