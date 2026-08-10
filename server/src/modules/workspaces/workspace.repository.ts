@@ -77,6 +77,28 @@ export const workspaceRepository = {
       .orderBy(desc(documents.updatedAt));
   },
 
+  async listDocumentIds(workspaceId: string) {
+    const rows = await db
+      .select({ id: documents.id })
+      .from(documents)
+      .where(eq(documents.workspaceId, workspaceId));
+
+    return rows.map((row) => row.id);
+  },
+
+  /**
+   * Documents, grants and everything hanging off them cascade from here, so
+   * one delete takes the whole workspace with it.
+   */
+  async remove(workspaceId: string) {
+    const [workspace] = await db
+      .delete(workspaces)
+      .where(eq(workspaces.id, workspaceId))
+      .returning();
+
+    return workspace ?? null;
+  },
+
   async findOrgUser(userId: string, orgId: string) {
     const [user] = await db
       .select()

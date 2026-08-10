@@ -36,6 +36,14 @@ export const documentController = {
     }
   ),
 
+  remove: route(
+    { params: idParams, query: noQuery },
+    async ({ params, user, res }) => {
+      await documentService.remove(user, params.id);
+      ok(res, { deleted: true });
+    }
+  ),
+
   role: publicRoute(
     { params: idParams, query: noQuery },
     async ({ params, req, res }) => {

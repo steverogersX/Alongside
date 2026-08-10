@@ -1,6 +1,6 @@
 import { hocuspocus } from "@/modules/collab/collab.server.ts";
 
-export type DocumentEvent = "chat" | "runs";
+export type DocumentEvent = "chat" | "runs" | "deleted";
 
 /**
  * Everyone in a document already holds an authenticated socket, so a change
@@ -12,4 +12,13 @@ export function notify(documentId: string, event: DocumentEvent) {
   if (!document) return;
 
   document.broadcastStateless(JSON.stringify({ event }));
+}
+
+/**
+ * The row is gone, but anyone still holding the room would keep typing into a
+ * document that no longer exists — tell them why, then drop the sockets.
+ */
+export function closeDocument(documentId: string) {
+  notify(documentId, "deleted");
+  hocuspocus.closeConnections(documentId);
 }

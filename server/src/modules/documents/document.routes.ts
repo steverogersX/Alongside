@@ -13,6 +13,7 @@ export const documentRoutes = Router();
 documentRoutes.get("/recent", requireUser, documentController.recent);
 documentRoutes.get("/:id", documentController.get);
 documentRoutes.patch("/:id", documentController.update);
+documentRoutes.delete("/:id", requireUser, documentController.remove);
 documentRoutes.get("/:id/role", documentController.role);
 
 documentRoutes.get("/:id/identity", presenceController.identity);

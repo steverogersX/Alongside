@@ -54,6 +54,19 @@ export const documentRepository = {
     return rows;
   },
 
+  /**
+   * Chat, runs and links all hang off the document with `on delete cascade`,
+   * so the row going is the whole document going.
+   */
+  async remove(documentId: string) {
+    const [document] = await db
+      .delete(documents)
+      .where(eq(documents.id, documentId))
+      .returning();
+
+    return document ?? null;
+  },
+
   async update(
     documentId: string,
     patch: Partial<Pick<Document, "title" | "status" | "content">>,

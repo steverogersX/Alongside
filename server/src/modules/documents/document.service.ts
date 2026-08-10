@@ -1,4 +1,6 @@
 import type { Role, User } from "@/db/types.ts";
+import { accessService, forgetAccess } from "@/modules/access/access.service.ts";
+import { closeDocument } from "@/modules/collab/collab.events.ts";
 import { documentRepository } from "@/modules/documents/document.repository.ts";
 import type { UpdateDocumentInput } from "@/modules/documents/document.schema.ts";
 import { forbidden, notFound } from "@/shared/errors.ts";
@@ -38,6 +40,22 @@ export const documentService = {
     if (!atLeast(role, "editor")) throw forbidden();
 
     return documentRepository.update(documentId, patch);
+  },
+
+  /**
+   * Deleting is an owner's decision, not an editor's — a link guest handed
+   * edit rights should never be able to take the document away.
+   */
+  async remove(user: User, documentId: string) {
+    await accessService.requireDocumentRole(user, documentId, "admin");
+
+    const document = await documentRepository.remove(documentId);
+    if (!document) throw notFound("Document not found");
+
+    closeDocument(documentId);
+    forgetAccess();
+
+    return document;
   },
 
   role(role: Role | null) {
