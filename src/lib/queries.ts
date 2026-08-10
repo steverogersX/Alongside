@@ -28,6 +28,7 @@ export const keys = {
   workspace: (id: string) => ["workspace", id] as const,
   agents: ["agents"] as const,
   document: (id: string) => ["document", id] as const,
+  documentAgents: (id: string) => ["document-agents", id] as const,
   chat: (id: string) => ["chat", id] as const,
   chatAccess: (id: string) => ["chat-access", id] as const,
   runs: (id: string) => ["runs", id] as const,
@@ -74,6 +75,23 @@ export function useDocument(id: string) {
       }>(`/documents/${id}`),
     enabled: Boolean(id),
     staleTime: 30_000,
+  });
+}
+
+/**
+ * Who can be summoned in this document. A member gets the same names from the
+ * workspace, but a guest cannot read a workspace at all — and still has to be
+ * offered someone when they type @.
+ */
+export function useDocumentAgents(documentId: string, enabled = true) {
+  return useQuery({
+    queryKey: keys.documentAgents(documentId),
+    queryFn: () =>
+      api<{ agents: { agent: Member; role: Role }[] }>(
+        `/documents/${documentId}/agents`
+      ),
+    enabled: enabled && Boolean(documentId),
+    staleTime: 60_000,
   });
 }
 

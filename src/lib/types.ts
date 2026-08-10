@@ -55,7 +55,10 @@ export type AgentRun = {
   id: string;
   documentId: string;
   agentId: string;
-  invokedBy: string;
+  /** Null when a share-link guest asked for it — see invokedByName. */
+  invokedBy: string | null;
+  invokedByVisitorId: string | null;
+  invokedByName: string | null;
   prompt: string;
   ceiling: Role;
   status:
