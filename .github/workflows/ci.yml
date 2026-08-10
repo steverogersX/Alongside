@@ -57,12 +57,11 @@ jobs:
       - name: Build web
         run: npm run build
 
-  # Deploying is done by hand, one service at a time, so a change to one half
-  # does not spend ten minutes rebuilding the other. Set the repository
-  # variable ZEROPS_AUTO_DEPLOY to "true" to hand it back to CI.
+  # Every push to master that passes the checks goes out. A pull request never
+  # reaches here — see the trigger above.
   deploy:
     needs: check
-    if: github.event_name != 'pull_request' && vars.ZEROPS_AUTO_DEPLOY == 'true'
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     # Without this the job is labelled with every matrix value, service id and
     # all, which reads as noise in the run list.
@@ -130,7 +129,7 @@ jobs:
 
   smoke:
     needs: deploy
-    if: github.event_name != 'pull_request' && vars.ZEROPS_AUTO_DEPLOY == 'true'
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: API is serving
