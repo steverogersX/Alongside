@@ -142,6 +142,41 @@ export function useCreateDocument(workspaceId: string) {
   });
 }
 
+/**
+ * Deleting takes every document in the room with it, so the caches that could
+ * still be holding one — the workspace itself, the home list, recents — are
+ * dropped rather than refetched.
+ */
+export function useDeleteWorkspace() {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: (workspaceId: string) =>
+      apiDelete<{ deleted: true }>(`/workspaces/${workspaceId}`),
+    onSuccess: (_data, workspaceId) => {
+      client.removeQueries({ queryKey: keys.workspace(workspaceId) });
+      void client.invalidateQueries({ queryKey: keys.workspaces });
+      void client.invalidateQueries({ queryKey: keys.recent });
+    },
+  });
+}
+
+export function useDeleteDocument(workspaceId?: string) {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: (documentId: string) =>
+      apiDelete<{ deleted: true }>(`/documents/${documentId}`),
+    onSuccess: (_data, documentId) => {
+      client.removeQueries({ queryKey: keys.document(documentId) });
+      void client.invalidateQueries({ queryKey: keys.recent });
+      if (workspaceId) {
+        void client.invalidateQueries({ queryKey: keys.workspace(workspaceId) });
+      }
+    },
+  });
+}
+
 export function useAddMember(workspaceId: string) {
   const client = useQueryClient();
 

@@ -1,13 +1,15 @@
 "use client";
 
-import { use } from "react";
+import { use, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Eye, Pencil } from "lucide-react";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Logo } from "@/components/logo";
 import { DocChat } from "@/components/doc/doc-chat";
 import { DocumentView } from "@/components/doc/document-view";
+import { useDocumentEvents } from "@/lib/collab";
 import { useChatAccess, useDocument } from "@/lib/queries";
 
 /**
@@ -20,6 +22,7 @@ export default function SharedDocumentPage({
   params: Promise<{ docId: string }>;
 }) {
   const { docId } = use(params);
+  const router = useRouter();
   const document = useDocument(docId);
   const access = useChatAccess(docId);
 
@@ -27,6 +30,23 @@ export default function SharedDocumentPage({
   const viaLink = document.data?.via === "link";
   const isMember = document.data?.via === "member";
   const hasChat = access.data !== undefined && access.data.chat !== "none";
+
+  // A guest has nowhere else to go once the document is gone, so say so on the
+  // page that already explains a link that no longer works.
+  const onEvent = useCallback(
+    (event: string) => {
+      if (event !== "deleted") return;
+
+      router.replace(
+        `/link-unavailable?reason=${encodeURIComponent(
+          "This document has been deleted"
+        )}`
+      );
+    },
+    [router]
+  );
+
+  useDocumentEvents(docId, Boolean(document.data), onEvent);
 
   return (
     <TooltipProvider>

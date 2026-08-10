@@ -2,15 +2,31 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Bot, FileText, FolderX, Plus } from "lucide-react";
+import {
+  ArrowUpRight,
+  Bot,
+  FileText,
+  FolderX,
+  MoreHorizontal,
+  Plus,
+  Trash2,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Shell, ShellRail } from "@/components/shell";
 import { EmptyState } from "@/components/empty-state";
 import { SectionHead } from "@/components/section-head";
 import { AgentsDialog } from "@/components/workspace/agents-dialog";
+import { DeleteWorkspaceDialog } from "@/components/workspace/delete-workspace-dialog";
+import { DeleteDocumentDialog } from "@/components/doc/delete-document-dialog";
 import { DocStatus } from "@/components/doc/doc-status";
 import { MemberStack } from "@/components/home/member-stack";
 import { WorkspaceMark } from "@/components/home/workspace-mark";
@@ -22,6 +38,7 @@ import {
 import { AgentAvatar } from "@/components/workspace/agent-avatar";
 import { personAvatar } from "@/lib/avatars";
 import { useCreateDocument, useWorkspace } from "@/lib/queries";
+import type { DocumentSummary } from "@/lib/types";
 
 export default function WorkspacePage({
   params,
@@ -33,11 +50,13 @@ export default function WorkspacePage({
   const createDocument = useCreateDocument(id);
   const [title, setTitle] = useState("");
   const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const detail = workspace.data;
   const members = detail?.members ?? [];
   const humans = members.filter((row) => row.user.kind === "human");
   const agents = members.filter((row) => row.user.kind === "bot");
+  const isAdmin = detail?.role === "admin";
 
   return (
     <Shell
@@ -62,6 +81,40 @@ export default function WorkspacePage({
             <Plus />
             New doc
           </Button>
+
+          {isAdmin && detail && (
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Workspace options"
+                  >
+                    <MoreHorizontal />
+                  </Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onSelect={() => setDeleting(true)}
+                    className="text-destructive data-highlighted:bg-destructive/10 data-highlighted:text-destructive"
+                  >
+                    <Trash2 className="size-3.5" />
+                    Delete workspace
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <DeleteWorkspaceDialog
+                workspaceId={id}
+                name={detail.workspace.name}
+                documentCount={detail.documents.length}
+                open={deleting}
+                onOpenChange={setDeleting}
+              />
+            </>
+          )}
         </>
       }
     >
@@ -193,50 +246,12 @@ export default function WorkspacePage({
                 ) : (
                   <div className="flex flex-col border-t border-border/70">
                     {detail.documents.map((doc) => (
-                      <div
+                      <DocumentRow
                         key={doc.id}
-                        className="group relative border-b border-border/70"
-                      >
-                        <Link
-                          href={`/w/${id}/${doc.id}`}
-                          className="absolute inset-0 rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/35"
-                        >
-                          <span className="sr-only">Open {doc.title}</span>
-                        </Link>
-
-                        <div className="pointer-events-none relative flex items-center gap-3.5 rounded-md py-3.5 pr-2 pl-4 transition-colors group-hover:bg-accent/45">
-                          <span
-                            aria-hidden
-                            className="absolute inset-y-3 left-0 w-[3px] rounded-full bg-primary opacity-0 transition-opacity group-hover:opacity-100"
-                          />
-
-                          <FileText
-                            className="size-4 shrink-0 text-muted-foreground"
-                            strokeWidth={1.75}
-                          />
-
-                          <span className="min-w-0 flex-1 truncate text-[14px] font-semibold tracking-[-0.011em]">
-                            {doc.title}
-                          </span>
-
-                          <DocStatus status={doc.status} />
-
-                          <time
-                            dateTime={doc.updatedAt}
-                            className="datum hidden w-20 shrink-0 text-right whitespace-nowrap text-muted-foreground sm:block"
-                          >
-                            {new Date(doc.updatedAt).toLocaleDateString(
-                              undefined,
-                              { month: "short", day: "numeric" }
-                            )}
-                          </time>
-
-                          <ArrowUpRight
-                            className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
-                            aria-hidden
-                          />
-                        </div>
-                      </div>
+                        workspaceId={id}
+                        doc={doc}
+                        canDelete={isAdmin}
+                      />
                     ))}
                   </div>
                 )}
@@ -246,6 +261,88 @@ export default function WorkspacePage({
         </div>
       </main>
     </Shell>
+  );
+}
+
+/**
+ * The whole row is one big link, so the delete button has to sit above it and
+ * take its own clicks back — otherwise pressing it would open the document.
+ */
+function DocumentRow({
+  workspaceId,
+  doc,
+  canDelete,
+}: {
+  workspaceId: string;
+  doc: DocumentSummary;
+  canDelete: boolean;
+}) {
+  const [deleting, setDeleting] = useState(false);
+
+  return (
+    <div className="group relative border-b border-border/70">
+      <Link
+        href={`/w/${workspaceId}/${doc.id}`}
+        className="absolute inset-0 rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/35"
+      >
+        <span className="sr-only">Open {doc.title}</span>
+      </Link>
+
+      <div className="pointer-events-none relative flex items-center gap-3.5 rounded-md py-3.5 pr-2 pl-4 transition-colors group-hover:bg-accent/45">
+        <span
+          aria-hidden
+          className="absolute inset-y-3 left-0 w-[3px] rounded-full bg-primary opacity-0 transition-opacity group-hover:opacity-100"
+        />
+
+        <FileText
+          className="size-4 shrink-0 text-muted-foreground"
+          strokeWidth={1.75}
+        />
+
+        <span className="min-w-0 flex-1 truncate text-[14px] font-semibold tracking-[-0.011em]">
+          {doc.title}
+        </span>
+
+        <DocStatus status={doc.status} />
+
+        <time
+          dateTime={doc.updatedAt}
+          className="datum hidden w-20 shrink-0 text-right whitespace-nowrap text-muted-foreground sm:block"
+        >
+          {new Date(doc.updatedAt).toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+          })}
+        </time>
+
+        {canDelete && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={`Delete ${doc.title}`}
+            onClick={() => setDeleting(true)}
+            className="pointer-events-auto shrink-0 text-muted-foreground opacity-0 hover:text-destructive focus-visible:opacity-100 group-hover:opacity-100"
+          >
+            <Trash2 />
+          </Button>
+        )}
+
+        <ArrowUpRight
+          className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+          aria-hidden
+        />
+      </div>
+
+      {canDelete && (
+        <DeleteDocumentDialog
+          documentId={doc.id}
+          workspaceId={workspaceId}
+          title={doc.title}
+          open={deleting}
+          onOpenChange={setDeleting}
+        />
+      )}
+    </div>
   );
 }
 
