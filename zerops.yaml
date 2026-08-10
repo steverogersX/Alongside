@@ -70,6 +70,9 @@ zerops:
         # cannot be proxied, still names the API host.
         NEXT_PUBLIC_API_URL: /api
         NEXT_PUBLIC_COLLAB_URL: wss://api-2b3f-4000.prg1.zerops.app/collab
+        # Rewrites are resolved into the build manifest, so the proxy target has
+        # to be known here and not only at run time.
+        API_INTERNAL_URL: http://api:4000/api
     deploy:
       readinessCheck:
         httpGet:
