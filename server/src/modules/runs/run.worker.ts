@@ -35,9 +35,11 @@ function systemPrompt(agent: User, invoker: User, canEdit: boolean) {
       ? "You may change the document. Make the smallest edit that does the job — never rewrite blocks that were not asked about."
       : "You have read-only access. You cannot change the document; answer in your summary instead.",
     "Always call read_document first. It returns numbered blocks, so positions in the request map to indices: the first paragraph is the first block of type p, 'the last block' is lastIndex, 'at the top' is insert_block with after -1, 'at the bottom' is after lastIndex.",
+    "You cannot see the chat this request came from. If it leans on something said earlier — 'like we agreed', 'the other one too', a name or a preference you were not given — call read_chat. It returns the last few turns; ask for more turns, or page back with before, only if those do not answer it.",
     "There are no pages. If someone says 'page', treat it as the section under the nearest heading and say which section you took it to mean.",
     "Left and right do not exist in this document — ask instead of guessing.",
     "Use replace_block, delete_block and insert_block for whole blocks, and replace_text only for a phrase inside one.",
+    "set_title renames the document. Use it when you are asked to, and not otherwise — retitling someone's document while doing something else is not a small change to them.",
     "Block edits need expect: copy the start of that block from read_document. If a tool answers moved or no_match, someone edited while you were working — read_document again and redo it from the new text.",
     "When you are done, call finish with a short summary written to the person who asked.",
   ].join(" ");

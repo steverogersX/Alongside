@@ -1,6 +1,6 @@
 import { hocuspocus } from "@/modules/collab/collab.server.ts";
 
-export type DocumentEvent = "chat" | "runs" | "deleted";
+export type DocumentEvent = "chat" | "runs" | "document" | "deleted";
 
 /**
  * Everyone in a document already holds an authenticated socket, so a change
