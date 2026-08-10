@@ -74,6 +74,7 @@ export function DocChat({ documentId }: { documentId: string }) {
       avatarSeed: row.user.avatarSeed,
       kind: row.user.kind === "bot" ? ("agent" as const) : ("human" as const),
       model: row.user.model,
+      provider: row.user.provider,
       disabledReason:
         row.user.kind === "bot" && row.role === "viewer"
           ? "Read-only in this workspace"
@@ -89,6 +90,11 @@ export function DocChat({ documentId }: { documentId: string }) {
 
   const modelFor = (userId: string) =>
     members.find((row) => row.user.id === userId)?.user.model ?? null;
+
+  // An agent has one face across the product, and the face is decided by what
+  // it runs on — so a run card must carry the provider the same as a message.
+  const providerFor = (userId: string) =>
+    members.find((row) => row.user.id === userId)?.user.provider ?? null;
 
   const waitingOn =
     connections.data?.connections.find(
@@ -106,6 +112,7 @@ export function DocChat({ documentId }: { documentId: string }) {
       avatarSeed: message.author.avatarSeed,
       kind: message.author.isGuest ? "guest" : message.author.kind,
       model: message.author.model,
+      provider: message.author.provider,
     },
     reactions: reactions[message.id],
   }));
@@ -129,6 +136,7 @@ export function DocChat({ documentId }: { documentId: string }) {
           displayName: nameFor(run.agentId),
           avatarSeed: seedFor(run.agentId),
           kind: "bot",
+          provider: providerFor(run.agentId),
         },
         run: {
           id: run.id,
@@ -142,6 +150,7 @@ export function DocChat({ documentId }: { documentId: string }) {
           agentName: nameFor(run.agentId),
           avatarSeed: seedFor(run.agentId),
           model: modelFor(run.agentId),
+          provider: providerFor(run.agentId),
           invokedBy: nameFor(run.invokedBy),
           isYours: run.invokedBy === viewerId,
           waitingOn,

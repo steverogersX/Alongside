@@ -8,8 +8,16 @@ import {
 import { personAvatar } from "@/lib/avatars";
 import { cn } from "@/lib/utils";
 
+/**
+ * OpenRouter is a gateway, not a vendor: its mark says nothing about what the
+ * agent actually is, and every agent behind it would wear the same one. Those
+ * get a generated face instead, from the random seed stored with the agent —
+ * so each is distinct, and the same one every time it appears.
+ */
+const FACELESS = new Set<ProviderId>(["other", "openrouter"]);
+
 const KNOWN = new Set(
-  PROVIDERS.filter((row) => row.id !== "other").map((row) => row.id)
+  PROVIDERS.filter((row) => !FACELESS.has(row.id)).map((row) => row.id)
 );
 
 /**
