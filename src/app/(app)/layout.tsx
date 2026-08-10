@@ -1,14 +1,5 @@
-import { redirect } from "next/navigation";
+import { RequireSession } from "@/lib/session-gate";
 
-import { SessionProvider } from "@/lib/session-provider";
-import { getSession } from "@/lib/session";
-
-// The session is read per request, so this cannot be prerendered.
-export const dynamic = "force-dynamic";
-
-export default async function AppLayout({ children }: LayoutProps<"/">) {
-  const user = await getSession();
-  if (!user) redirect("/login");
-
-  return <SessionProvider user={user}>{children}</SessionProvider>;
+export default function AppLayout({ children }: LayoutProps<"/">) {
+  return <RequireSession>{children}</RequireSession>;
 }
