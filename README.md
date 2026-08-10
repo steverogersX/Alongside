@@ -10,8 +10,23 @@ the way it did. Most of them were forced by something that broke.
 
 ---
 
+## Demo
+
+[![Watch the Alongside demo](https://img.youtube.com/vi/XiDbQ9uE2w8/hqdefault.jpg)](https://www.youtube.com/embed/XiDbQ9uE2w8?loop=1&playlist=XiDbQ9uE2w8&autoplay=1&rel=0)
+
+▶ **[Watch it loop](https://www.youtube.com/embed/XiDbQ9uE2w8?loop=1&playlist=XiDbQ9uE2w8&autoplay=1&rel=0)** — or on
+[YouTube](https://youtu.be/XiDbQ9uE2w8).
+
+The first link opens the player set to repeat, so it runs continuously without
+being restarted. GitHub strips `<iframe>` from a README, so nothing can play
+inline here — a thumbnail that opens the looping player is as close as this
+page gets.
+
+---
+
 ## Contents
 
+- [Demo](#demo)
 - [Running it locally](#running-it-locally)
 - [The shape of the system](#the-shape-of-the-system)
 - [Data model](#data-model)
