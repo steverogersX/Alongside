@@ -23,6 +23,7 @@ the way it did. Most of them were forced by something that broke.
 - [Deployment](#deployment)
 - [Verification](#verification)
 - [Known gaps](#known-gaps)
+- [AI tool disclosure](AI-DISCLOSURE.md)
 
 ---
 
@@ -438,3 +439,11 @@ stands, worth changing.
 **One API process.** The in-process cache and the run worker both assume it. A
 second instance needs Redis for the first and a leader election or advisory
 lock for the second.
+
+---
+
+## AI tool disclosure
+
+This project was built with AI assistance. What was used, for what, and how the
+output was checked is recorded in [AI-DISCLOSURE.md](AI-DISCLOSURE.md), with
+per-commit attribution in the git history.
