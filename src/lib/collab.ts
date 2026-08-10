@@ -13,6 +13,7 @@ export type CollabIdentity = {
   color: string;
   kind: "member" | "guest" | "agent";
   role: "viewer" | "editor" | "admin";
+  token: string;
 };
 
 export type AwarenessUser = {
@@ -25,14 +26,18 @@ export type AwarenessUser = {
   provider?: string | null;
 };
 
-const HTTP_BASE =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
+/**
+ * The socket goes straight to the collaboration server. A WebSocket upgrade
+ * cannot be proxied through the app's rewrites, so this is the one address the
+ * browser still reaches directly — and why the connection authenticates with a
+ * token rather than a cookie it would never be allowed to send.
+ */
+const COLLAB_URL =
+  process.env.NEXT_PUBLIC_COLLAB_URL ?? "ws://localhost:4000/collab";
 
-function socketUrl(documentId: string) {
-  const base = new URL(HTTP_BASE);
-  base.protocol = base.protocol === "https:" ? "wss:" : "ws:";
-  base.pathname = "/collab";
-  base.search = `?doc=${encodeURIComponent(documentId)}`;
+function socketUrl(documentId: string, token: string) {
+  const base = new URL(COLLAB_URL);
+  base.search = `?doc=${encodeURIComponent(documentId)}&token=${encodeURIComponent(token)}`;
   return base.toString();
 }
 
@@ -91,7 +96,7 @@ function acquire(documentId: string) {
       const doc = new Y.Doc();
 
       const provider = new HocuspocusProvider({
-        url: socketUrl(documentId),
+        url: socketUrl(documentId, identity.token),
         name: documentId,
         document: doc,
         onStatus: ({ status }) => {

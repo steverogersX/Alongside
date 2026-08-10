@@ -6,10 +6,13 @@ import { api } from "@/lib/api";
  * The API as this server reaches it, which need not be the URL the browser
  * uses: inside a container network the public hostname often does not resolve.
  */
-const BASE_URL =
-  process.env.API_INTERNAL_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:4000/api";
+const CONFIGURED =
+  process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "";
+
+// The browser's value may be a relative path, which node cannot fetch.
+const BASE_URL = CONFIGURED.startsWith("http")
+  ? CONFIGURED
+  : "http://localhost:4000/api";
 
 /** A slow API should not hold the page hostage; the client can retry. */
 const TIMEOUT_MS = 3000;

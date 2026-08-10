@@ -7,6 +7,7 @@ import {
 
 import { accessService } from "@/modules/access/access.service.ts";
 import { identityFor } from "@/modules/collab/collab.identity.ts";
+import { collabToken } from "@/modules/collab/collab.token.ts";
 import type { HeartbeatInput } from "@/modules/presence/presence.schema.ts";
 import {
   presenceStore,
@@ -72,7 +73,15 @@ export const presenceService = {
     const who = identify(req, documentId);
     if (!who) throw notFound("Document not found");
 
-    return { ...who, color: identityFor(who.key), role: access.role };
+    const identity = {
+      ...who,
+      color: identityFor(who.key),
+      role: access.role,
+    };
+
+    // The socket is opened against a different host, so it cannot rely on this
+    // request's cookie; it carries this token instead.
+    return { ...identity, token: await collabToken.issue(identity, documentId) };
   },
 
   async leave(req: Request, documentId: string) {

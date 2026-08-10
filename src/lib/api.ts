@@ -28,7 +28,11 @@ export class ApiRequestError extends Error {
   }
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
+/**
+ * Relative on purpose: the API is proxied under this app's origin so the
+ * session stays a first-party cookie. See the rewrite in next.config.ts.
+ */
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api";
 
 /** `baseUrl` is for the server, which reaches the API on a different address. */
 type RequestOptions = RequestInit & { baseUrl?: string };

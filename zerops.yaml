@@ -61,10 +61,15 @@ zerops:
       cache:
         - node_modules
       envVariables:
-        # Next inlines NEXT_PUBLIC_* at build time, so this has to be set here
+        # Next inlines NEXT_PUBLIC_* at build time, so these have to be set here
         # rather than at run time — and spelled out, since the cross-service
         # reference is not substituted.
-        NEXT_PUBLIC_API_URL: https://api-2b3f-4000.prg1.zerops.app/api
+        #
+        # The API is reached through this app's own origin (see the rewrite in
+        # next.config.ts) so its cookies are first-party. Only the socket, which
+        # cannot be proxied, still names the API host.
+        NEXT_PUBLIC_API_URL: /api
+        NEXT_PUBLIC_COLLAB_URL: wss://api-2b3f-4000.prg1.zerops.app/collab
     deploy:
       readinessCheck:
         httpGet:
@@ -81,3 +86,5 @@ zerops:
       start: npx next start -p 3000
       envVariables:
         NODE_ENV: production
+        # The rewrite target, resolved on the project's private network.
+        API_INTERNAL_URL: http://api:4000/api

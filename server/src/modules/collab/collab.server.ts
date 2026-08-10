@@ -14,6 +14,7 @@ import {
   type CollabIdentity,
 } from "@/modules/collab/collab.identity.ts";
 import { collabPersistence } from "@/modules/collab/collab.persistence.ts";
+import { collabToken } from "@/modules/collab/collab.token.ts";
 import { atLeast } from "@/shared/role.ts";
 
 export const COLLAB_PATH = "/collab";
@@ -84,7 +85,13 @@ export function mountCollabServer(server: HttpServer) {
       let identity: CollabIdentity | null = null;
 
       try {
-        identity = await identifyConnection(request, documentId);
+        // The token comes first: a browser blocking third-party cookies sends
+        // nothing here, and that is the default in private windows.
+        const token = url.searchParams.get("token");
+
+        identity = token
+          ? await collabToken.verify(token, documentId)
+          : await identifyConnection(request, documentId);
       } catch (error) {
         console.error("collab upgrade failed", error);
         return reject(socket, 500, "Internal Server Error");
