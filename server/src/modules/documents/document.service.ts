@@ -1,5 +1,6 @@
-import type { Role, User } from "@/db/types.ts";
+import type { PublicUser, Role, User } from "@/db/types.ts";
 import { accessService, forgetAccess } from "@/modules/access/access.service.ts";
+import { toPublicUser } from "@/modules/auth/auth.mapper.ts";
 import { closeDocument } from "@/modules/collab/collab.events.ts";
 import { documentRepository } from "@/modules/documents/document.repository.ts";
 import type { UpdateDocumentInput } from "@/modules/documents/document.schema.ts";
@@ -40,6 +41,27 @@ export const documentService = {
     if (!atLeast(role, "editor")) throw forbidden();
 
     return documentRepository.update(documentId, patch);
+  },
+
+  /**
+   * Which agents can be summoned here, for anyone who can reach the document —
+   * a guest typing @ has to be offered the same names a member would be.
+   */
+  async agents(documentId: string, access: Access | null) {
+    if (!access) throw notFound("Document not found");
+
+    const agents = await accessService.agentsForDocument(documentId);
+
+    const rows = await Promise.all(
+      agents.map(async (agent) => ({
+        agent: toPublicUser(agent),
+        role: await accessService.documentRole(agent, documentId),
+      }))
+    );
+
+    return rows.filter(
+      (row): row is { agent: PublicUser; role: Role } => row.role !== null
+    );
   },
 
   /**

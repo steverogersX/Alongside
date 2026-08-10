@@ -15,6 +15,7 @@ documentRoutes.get("/:id", documentController.get);
 documentRoutes.patch("/:id", documentController.update);
 documentRoutes.delete("/:id", requireUser, documentController.remove);
 documentRoutes.get("/:id/role", documentController.role);
+documentRoutes.get("/:id/agents", documentController.agents);
 
 documentRoutes.get("/:id/identity", presenceController.identity);
 documentRoutes.post("/:id/presence", presenceController.heartbeat);
@@ -24,7 +25,7 @@ documentRoutes.get("/:id/chat", chatController.list);
 documentRoutes.get("/:id/chat/access", chatController.access);
 documentRoutes.post("/:id/chat", chatController.post);
 
-documentRoutes.get("/:id/runs", requireUser, runController.list);
+documentRoutes.get("/:id/runs", runController.list);
 documentRoutes.post("/:id/runs", requireUser, runController.start);
 documentRoutes.post("/:id/runs/:runId/cancel", requireUser, runController.cancel);
 documentRoutes.post("/:id/runs/:runId/decide", requireUser, runController.decide);

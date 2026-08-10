@@ -174,6 +174,7 @@ export const tools = [
     async run(identity: McpIdentity, input: z.infer<typeof listMentions>) {
       const rows = await runRepository.queuedForUser(
         identity.user.id,
+        identity.agent.id,
         input.limit
       );
 

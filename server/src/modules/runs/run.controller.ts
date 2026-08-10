@@ -1,3 +1,4 @@
+import { accessService } from "@/modules/access/access.service.ts";
 import { runService } from "@/modules/runs/run.service.ts";
 import {
   decideRunSchema,
@@ -5,7 +6,7 @@ import {
   startRunSchema,
 } from "@/modules/runs/run.schema.ts";
 import { accepted, ok } from "@/shared/response.ts";
-import { route } from "@/shared/route.ts";
+import { publicRoute, route } from "@/shared/route.ts";
 import {
   idParams,
   noBody,
@@ -14,10 +15,15 @@ import {
 } from "@/shared/validation.ts";
 
 export const runController = {
-  list: route(
+  /**
+   * A guest who can start a run has to be able to watch it, so this one reads
+   * from the link session too — starting, stopping and deciding do not.
+   */
+  list: publicRoute(
     { params: idParams, query: paginationQuery },
-    async ({ params, query, user, res }) => {
-      const runs = await runService.list(user, params.id, query);
+    async ({ params, query, req, res }) => {
+      const access = await accessService.contextAccess(req, params.id);
+      const runs = await runService.list(access, params.id, query);
       ok(res, { runs }, { count: runs.length });
     }
   ),
