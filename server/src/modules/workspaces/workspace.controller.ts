@@ -30,6 +30,14 @@ export const workspaceController = {
     }
   ),
 
+  remove: route(
+    { params: idParams, query: noQuery },
+    async ({ params, user, res }) => {
+      await workspaceService.remove(user, params.id);
+      ok(res, { deleted: true });
+    }
+  ),
+
   agents: route(
     { params: idParams, query: noQuery },
     async ({ params, user, res }) => {

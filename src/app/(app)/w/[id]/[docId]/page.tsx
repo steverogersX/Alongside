@@ -1,15 +1,25 @@
 "use client";
 
-import { use } from "react";
-import { Bot, Share2 } from "lucide-react";
+import { use, useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { Bot, MoreHorizontal, Share2, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Shell, ShellRail } from "@/components/shell";
+import { DeleteDocumentDialog } from "@/components/doc/delete-document-dialog";
 import { DocumentView } from "@/components/doc/document-view";
 import { DocPanel } from "@/components/doc/doc-panel";
 import { ShareDialog } from "@/components/doc/share-dialog";
 import { AgentsDialog } from "@/components/workspace/agents-dialog";
-import { useDocument, useWorkspace } from "@/lib/queries";
+import { useDocumentEvents } from "@/lib/collab";
+import { keys, useDocument, useWorkspace } from "@/lib/queries";
 
 export default function DocumentPage({
   params,
@@ -17,11 +27,33 @@ export default function DocumentPage({
   params: Promise<{ id: string; docId: string }>;
 }) {
   const { id, docId } = use(params);
+  const router = useRouter();
+  const client = useQueryClient();
   const workspace = useWorkspace(id);
   const document = useDocument(docId);
+  const [deleting, setDeleting] = useState(false);
 
   const canShare =
     document.data?.role === "editor" || document.data?.role === "admin";
+  const canDelete = document.data?.role === "admin";
+
+  const onEvent = useCallback(
+    (event: string) => {
+      // Someone else deleted this out from under us — the socket is about to
+      // be closed, so leave before the editor is writing into nothing.
+      if (event === "deleted") router.replace(`/w/${id}`);
+
+      // The title and status sit outside the shared text, so a rename arrives
+      // as a nudge to refetch rather than as an edit.
+      if (event === "document") {
+        void client.invalidateQueries({ queryKey: keys.document(docId) });
+        void client.invalidateQueries({ queryKey: keys.workspace(id) });
+      }
+    },
+    [router, client, id, docId]
+  );
+
+  useDocumentEvents(docId, Boolean(document.data), onEvent);
 
   return (
     <Shell
@@ -56,6 +88,40 @@ export default function DocumentPage({
                 </Button>
               }
             />
+          )}
+          {canDelete && document.data && (
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Document options"
+                  >
+                    <MoreHorizontal />
+                  </Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onSelect={() => setDeleting(true)}
+                    className="text-destructive data-highlighted:bg-destructive/10 data-highlighted:text-destructive"
+                  >
+                    <Trash2 className="size-3.5" />
+                    Delete document
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <DeleteDocumentDialog
+                documentId={docId}
+                workspaceId={id}
+                title={document.data.document.title}
+                open={deleting}
+                onOpenChange={setDeleting}
+                redirectTo={`/w/${id}`}
+              />
+            </>
           )}
         </>
       }

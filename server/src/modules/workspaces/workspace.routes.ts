@@ -10,6 +10,7 @@ workspaceRoutes.use(requireUser);
 workspaceRoutes.get("/", workspaceController.list);
 workspaceRoutes.post("/", workspaceController.create);
 workspaceRoutes.get("/:id", workspaceController.detail);
+workspaceRoutes.delete("/:id", workspaceController.remove);
 workspaceRoutes.get("/:id/agents", workspaceController.agents);
 workspaceRoutes.post("/:id/members", workspaceController.addMember);
 workspaceRoutes.delete("/:id/members/:userId", workspaceController.removeMember);

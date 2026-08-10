@@ -1,4 +1,5 @@
 import type { AgentRun, User } from "@/db/types.ts";
+import { chatTurns } from "@/modules/chat/chat.history.ts";
 import { chatRepository } from "@/modules/chat/chat.repository.ts";
 import { agentPresence } from "@/modules/collab/collab.agent-presence.ts";
 import { collabDocument } from "@/modules/collab/collab.document.ts";
@@ -13,6 +14,26 @@ const READ_TOOLS: ToolSpec[] = [
     description:
       "Read the document as numbered blocks. Every block has an index, a type (p, h1..h6, blockquote, list) and its text. Use the indices to act on positions such as 'the second paragraph' or 'the last block'.",
     schema: { type: "object", properties: {}, required: [] },
+  },
+  {
+    name: "read_chat",
+    description:
+      "Read what has been said in this document's chat, newest first, grouped into turns — one turn is one person's uninterrupted stretch of messages. Only this document is visible. Start with the default of 3 turns; if that does not reach far enough back, call it again with a larger turns, or with before set to skip what you have already read. Use it when the request leans on something said earlier — 'like we agreed', 'the tone Noor wanted', 'do the other one too'.",
+    schema: {
+      type: "object",
+      properties: {
+        turns: {
+          type: "integer",
+          description: "How many turns to return, counting back from the most recent. Defaults to 3, capped at 25.",
+        },
+        before: {
+          type: "integer",
+          description:
+            "Skip this many of the most recent turns first. Use it with turns to page further back through older discussion. Defaults to 0.",
+        },
+      },
+      required: [],
+    },
   },
 ];
 
@@ -65,6 +86,18 @@ const WRITE_TOOLS: ToolSpec[] = [
     },
   },
   {
+    name: "set_title",
+    description:
+      "Rename the document. Only when the request asks for it — a title someone chose is not yours to tidy up while doing something else.",
+    schema: {
+      type: "object",
+      properties: {
+        title: { type: "string", description: "The new title, plain text, up to 200 characters." },
+      },
+      required: ["title"],
+    },
+  },
+  {
     name: "replace_text",
     description:
       "Replace an exact snippet of the document. The snippet must appear exactly once — include surrounding words to make it unique.",
@@ -109,6 +142,15 @@ export function toolsFor(run: AgentRun): ToolSpec[] {
     : [...READ_TOOLS, FINISH_TOOL];
 }
 
+/** Matches what the update endpoint accepts from a person. */
+const MAX_TITLE = 200;
+
+/** Models hand back "3", 3 and 3.0 for the same number; none of them is wrong. */
+const toCount = (value: unknown) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
 export async function runTool(
   run: AgentRun,
   agent: User,
@@ -124,6 +166,14 @@ export async function runTool(
       blocks,
       lastIndex: blocks.length - 1,
     };
+  }
+
+  if (name === "read_chat") {
+    return chatTurns(run.documentId, {
+      turns: toCount(input.turns),
+      before: toCount(input.before),
+      excludeRunId: run.id,
+    });
   }
 
   if (name === "replace_block") {
@@ -157,6 +207,29 @@ export async function runTool(
       String(input.text ?? ""),
       String(input.type ?? "p")
     );
+  }
+
+  if (name === "set_title") {
+    const title = String(input.title ?? "").trim();
+
+    if (!title) {
+      return { error: "empty", message: "A document needs a title." };
+    }
+
+    if (title.length > MAX_TITLE) {
+      return {
+        error: "too_long",
+        message: `Titles are at most ${MAX_TITLE} characters.`,
+      };
+    }
+
+    const document = await documentRepository.update(run.documentId, { title });
+
+    // The title lives beside the Yjs text rather than inside it, so a rename
+    // reaches open readers only if we say so.
+    notify(run.documentId, "document");
+
+    return { title: document.title };
   }
 
   if (name === "replace_text") {

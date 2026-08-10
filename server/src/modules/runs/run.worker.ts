@@ -27,17 +27,31 @@ const TIMEOUT_MS = 150_000;
 const handleOf = (displayName: string) =>
   displayName.trim().split(/\s+/)[0]!.toLowerCase();
 
-function systemPrompt(agent: User, invoker: User, canEdit: boolean) {
+/**
+ * Whoever asked, as far as the run is concerned. A guest holding a share link
+ * has a name and nothing else — no account to look up, no handle to answer to.
+ */
+type Asker = { name: string; handle: string | null };
+
+function askerOf(run: AgentRun, invoker: User | null): Asker {
+  return invoker
+    ? { name: invoker.displayName, handle: handleOf(invoker.displayName) }
+    : { name: run.invokedByName ?? "A guest", handle: null };
+}
+
+function systemPrompt(agent: User, asker: Asker, canEdit: boolean) {
   return [
     `You are ${agent.displayName}, working inside a shared document in Alongside.`,
-    `${invoker.displayName} asked you to do something. Other people are reading the same document live.`,
+    `${asker.name} asked you to do something. Other people are reading the same document live.`,
     canEdit
       ? "You may change the document. Make the smallest edit that does the job — never rewrite blocks that were not asked about."
       : "You have read-only access. You cannot change the document; answer in your summary instead.",
     "Always call read_document first. It returns numbered blocks, so positions in the request map to indices: the first paragraph is the first block of type p, 'the last block' is lastIndex, 'at the top' is insert_block with after -1, 'at the bottom' is after lastIndex.",
+    "You cannot see the chat this request came from. If it leans on something said earlier — 'like we agreed', 'the other one too', a name or a preference you were not given — call read_chat. It returns the last few turns; ask for more turns, or page back with before, only if those do not answer it.",
     "There are no pages. If someone says 'page', treat it as the section under the nearest heading and say which section you took it to mean.",
     "Left and right do not exist in this document — ask instead of guessing.",
     "Use replace_block, delete_block and insert_block for whole blocks, and replace_text only for a phrase inside one.",
+    "set_title renames the document. Use it when you are asked to, and not otherwise — retitling someone's document while doing something else is not a small change to them.",
     "Block edits need expect: copy the start of that block from read_document. If a tool answers moved or no_match, someone edited while you were working — read_document again and redo it from the new text.",
     "When you are done, call finish with a short summary written to the person who asked.",
   ].join(" ");
@@ -50,13 +64,11 @@ async function execute(run: AgentRun) {
     .where(eq(users.id, run.agentId))
     .limit(1);
 
-  const [invoker] = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, run.invokedBy))
-    .limit(1);
+  const [invoker] = run.invokedBy
+    ? await db.select().from(users).where(eq(users.id, run.invokedBy)).limit(1)
+    : [null];
 
-  if (!agent || !invoker) {
+  if (!agent || (run.invokedBy && !invoker)) {
     await runRepository.finish(run.id, {
       status: "failed",
       error: "That agent no longer exists.",
@@ -64,8 +76,10 @@ async function execute(run: AgentRun) {
     return;
   }
 
+  const asker = askerOf(run, invoker ?? null);
+
   if (!agent.keyCipher || !agent.provider || !agent.model) {
-    await settle(run, agent, invoker, {
+    await settle(run, agent, asker, {
       status: "failed",
       message: "No provider key is set for this agent.",
     });
@@ -78,14 +92,14 @@ async function execute(run: AgentRun) {
 
   const turns: Turn[] = [{ role: "user", text: run.prompt }];
 
-  await agentPresence.join(run.documentId, agent, invoker);
+  await agentPresence.join(run.documentId, agent, asker.name);
 
   // Answer before working: a request that sits silently for thirty seconds
   // reads as ignored, whoever is watching.
   await say(
     run,
     agent,
-    invoker,
+    asker,
     atLeast(run.ceiling, "editor")
       ? "On it — I'll make the change and tell you when it's done."
       : "On it — I can only read here, so I'll reply with what I find."
@@ -94,7 +108,7 @@ async function execute(run: AgentRun) {
   try {
     for (let step = 0; step < MAX_STEPS; step += 1) {
       if (Date.now() > deadline) {
-        await settle(run, agent, invoker, {
+        await settle(run, agent, asker, {
           status: "failed",
           message: "I ran out of time on that one.",
         });
@@ -112,7 +126,7 @@ async function execute(run: AgentRun) {
             apiKey: open(agent.keyCipher!),
             baseUrl: baseUrlFor(agent.provider as Provider, agent.baseUrl),
             model: agent.model!,
-            system: systemPrompt(agent, invoker, atLeast(run.ceiling, "editor")),
+            system: systemPrompt(agent, asker, atLeast(run.ceiling, "editor")),
             turns,
             tools,
           }),
@@ -130,7 +144,7 @@ async function execute(run: AgentRun) {
 
       const finish = reply.calls.find((call) => call.name === "finish");
       if (finish) {
-        await settle(run, agent, invoker, {
+        await settle(run, agent, asker, {
           status: "succeeded",
           message: String(finish.input.summary ?? "Done."),
         });
@@ -138,7 +152,7 @@ async function execute(run: AgentRun) {
       }
 
       if (reply.calls.length === 0) {
-        await settle(run, agent, invoker, {
+        await settle(run, agent, asker, {
           status: "succeeded",
           message: reply.text || "Done.",
         });
@@ -158,12 +172,12 @@ async function execute(run: AgentRun) {
       }
     }
 
-    await settle(run, agent, invoker, {
+    await settle(run, agent, asker, {
       status: "failed",
       message: "I went in circles on that one and stopped.",
     });
   } catch (error) {
-    await settle(run, agent, invoker, {
+    await settle(run, agent, asker, {
       status: "failed",
       message: explain(error),
     });
@@ -199,12 +213,14 @@ function explain(error: unknown) {
 async function say(
   run: AgentRun,
   agent: User,
-  invoker: User,
+  asker: Asker,
   message: string
 ) {
   await chatRepository.create({
     documentId: run.documentId,
-    body: `@${handleOf(invoker.displayName)} ${message}`,
+    // A guest has no handle to answer to, so the reply just lands under what
+    // they said rather than pointing at a name that means nothing.
+    body: asker.handle ? `@${asker.handle} ${message}` : message,
     authorId: agent.id,
     runId: run.id,
   });
@@ -215,10 +231,10 @@ async function say(
 async function settle(
   run: AgentRun,
   agent: User,
-  invoker: User,
+  asker: Asker,
   outcome: { status: "succeeded" | "failed"; message: string }
 ) {
-  await say(run, agent, invoker, outcome.message);
+  await say(run, agent, asker, outcome.message);
 
   await runRepository.finish(run.id, {
     status: outcome.status,

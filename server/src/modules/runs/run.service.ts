@@ -1,5 +1,5 @@
 import { db } from "@/db/client.ts";
-import type { Document, User } from "@/db/types.ts";
+import type { Document, Role, User } from "@/db/types.ts";
 import { accessService } from "@/modules/access/access.service.ts";
 import { chatRepository } from "@/modules/chat/chat.repository.ts";
 import { notify } from "@/modules/collab/collab.events.ts";
@@ -14,8 +14,12 @@ import { atLeast } from "@/shared/role.ts";
 import type { PaginationQuery } from "@/shared/validation.ts";
 
 export const runService = {
-  async list(user: User, documentId: string, page: PaginationQuery) {
-    await accessService.requireDocumentRole(user, documentId, "viewer");
+  async list(
+    access: { role: Role } | null,
+    documentId: string,
+    page: PaginationQuery
+  ) {
+    if (!access) throw notFound("Document not found");
     return runRepository.listForDocument(documentId, page.limit, page.offset);
   },
 

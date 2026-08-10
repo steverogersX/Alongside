@@ -1,14 +1,17 @@
 "use client";
 
-import { use } from "react";
+import { use, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { Eye, Pencil } from "lucide-react";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Logo } from "@/components/logo";
 import { DocChat } from "@/components/doc/doc-chat";
 import { DocumentView } from "@/components/doc/document-view";
-import { useChatAccess, useDocument } from "@/lib/queries";
+import { useDocumentEvents } from "@/lib/collab";
+import { keys, useChatAccess, useDocument } from "@/lib/queries";
 
 /**
  * The same paper as inside the app, minus the navigation — someone arriving on
@@ -20,6 +23,8 @@ export default function SharedDocumentPage({
   params: Promise<{ docId: string }>;
 }) {
   const { docId } = use(params);
+  const router = useRouter();
+  const client = useQueryClient();
   const document = useDocument(docId);
   const access = useChatAccess(docId);
 
@@ -27,6 +32,28 @@ export default function SharedDocumentPage({
   const viaLink = document.data?.via === "link";
   const isMember = document.data?.via === "member";
   const hasChat = access.data !== undefined && access.data.chat !== "none";
+
+  const onEvent = useCallback(
+    (event: string) => {
+      if (event === "document") {
+        void client.invalidateQueries({ queryKey: keys.document(docId) });
+        return;
+      }
+
+      if (event !== "deleted") return;
+
+      // A guest has nowhere else to go once the document is gone, so say so on
+      // the page that already explains a link that no longer works.
+      router.replace(
+        `/link-unavailable?reason=${encodeURIComponent(
+          "This document has been deleted"
+        )}`
+      );
+    },
+    [router, client, docId]
+  );
+
+  useDocumentEvents(docId, Boolean(document.data), onEvent);
 
   return (
     <TooltipProvider>

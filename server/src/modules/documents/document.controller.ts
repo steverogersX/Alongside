@@ -36,6 +36,23 @@ export const documentController = {
     }
   ),
 
+  agents: publicRoute(
+    { params: idParams, query: noQuery },
+    async ({ params, req, res }) => {
+      const access = await accessService.contextAccess(req, params.id);
+      const agents = await documentService.agents(params.id, access);
+      ok(res, { agents }, { count: agents.length });
+    }
+  ),
+
+  remove: route(
+    { params: idParams, query: noQuery },
+    async ({ params, user, res }) => {
+      await documentService.remove(user, params.id);
+      ok(res, { deleted: true });
+    }
+  ),
+
   role: publicRoute(
     { params: idParams, query: noQuery },
     async ({ params, req, res }) => {

@@ -101,6 +101,19 @@ export const accessService = {
     return role;
   },
 
+  /**
+   * A guest has no seat of their own — the link is their whole standing here,
+   * so it caps the agent the same way an invoking member's role would.
+   */
+  async resolveLinkCeiling(
+    agent: User,
+    documentId: string,
+    linkRole: Role
+  ): Promise<Role | null> {
+    const agentRole = await this.documentRole(agent, documentId);
+    return agentRole ? lower(agentRole, linkRole) : null;
+  },
+
   async resolveCeiling(
     agentId: string,
     invoker: User,

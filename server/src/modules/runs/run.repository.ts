@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, or, sql } from "drizzle-orm";
 
 import { db, type Tx } from "@/db/client.ts";
 import { agentRuns, documents } from "@/db/schema/index.ts";
@@ -32,12 +32,18 @@ export const runRepository = {
     input: {
       documentId: string;
       agentId: string;
-      invokedBy: string;
       prompt: string;
       ceiling: Role;
       status?: RunStatus;
       triggerMessageId?: string;
-    }
+    } & (
+      | { invokedBy: string }
+      | {
+          invokedByLinkId: string;
+          invokedByVisitorId: string;
+          invokedByName: string;
+        }
+    )
   ) {
     const [run] = await tx.insert(agentRuns).values(input).returning();
     return run!;
@@ -101,12 +107,25 @@ export const runRepository = {
     return claimed.rows[0] ? this.find(runId) : null;
   },
 
-  async queuedForUser(userId: string, limit: number) {
+  /**
+   * What this connection is being asked to do: anything its own human queued,
+   * plus anything a share-link guest queued for this agent — a guest has no
+   * account to match on, so those would otherwise be waited on by nobody.
+   */
+  async queuedForUser(userId: string, agentId: string, limit: number) {
     return db
       .select({ run: agentRuns, document: documents })
       .from(agentRuns)
       .innerJoin(documents, eq(documents.id, agentRuns.documentId))
-      .where(and(eq(agentRuns.invokedBy, userId), eq(agentRuns.status, "queued")))
+      .where(
+        and(
+          eq(agentRuns.status, "queued"),
+          or(
+            eq(agentRuns.invokedBy, userId),
+            and(eq(agentRuns.agentId, agentId), isNull(agentRuns.invokedBy))
+          )
+        )
+      )
       .orderBy(desc(agentRuns.createdAt))
       .limit(limit);
   },

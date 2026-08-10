@@ -8,6 +8,7 @@ import { ChatView, type ChatEntry } from "@/components/doc/chat-view";
 import type { ChatReaction } from "@/components/doc/message-reactions";
 import type { Mentionable } from "@/components/doc/mention-menu";
 import { useDocumentEvents } from "@/lib/collab";
+import type { AgentRun } from "@/lib/types";
 import {
   keys,
   useCancelRun,
@@ -15,6 +16,7 @@ import {
   useChatAccess,
   useConnections,
   useDocument,
+  useDocumentAgents,
   useRuns,
   useSendMessage,
   useWorkspace,
@@ -36,6 +38,8 @@ export function DocChat({ documentId }: { documentId: string }) {
 
   const level = access.data?.chat ?? "none";
   const viewerId = access.data?.viewerId ?? null;
+  const isGuest = document.data?.via === "link";
+  const documentAgents = useDocumentAgents(documentId, isGuest);
 
   const runs = useRuns(documentId);
   const chat = useChat(
@@ -64,9 +68,18 @@ export function DocChat({ documentId }: { documentId: string }) {
   const send = useSendMessage(documentId);
   const cancel = useCancelRun(documentId);
 
+  // A guest is a stranger to the workspace, so the roster they mention from is
+  // the document's own agents. Members keep the full list, people included.
+  const roster = isGuest
+    ? (documentAgents.data?.agents ?? []).map((row) => ({
+        user: row.agent,
+        role: row.role,
+      }))
+    : (workspace.data?.members ?? []);
+
   const members = workspace.data?.members ?? [];
 
-  const mentionables: Mentionable[] = members
+  const mentionables: Mentionable[] = roster
     .map((row) => ({
       id: row.user.id,
       name: firstName(row.user.displayName),
@@ -74,6 +87,7 @@ export function DocChat({ documentId }: { documentId: string }) {
       avatarSeed: row.user.avatarSeed,
       kind: row.user.kind === "bot" ? ("agent" as const) : ("human" as const),
       model: row.user.model,
+      provider: row.user.provider,
       disabledReason:
         row.user.kind === "bot" && row.role === "viewer"
           ? "Read-only in this workspace"
@@ -81,14 +95,20 @@ export function DocChat({ documentId }: { documentId: string }) {
     }))
     .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "agent" ? -1 : 1));
 
-  const nameFor = (userId: string) =>
-    members.find((row) => row.user.id === userId)?.user.displayName ?? "someone";
+  const find = (userId: string) =>
+    roster.find((row) => row.user.id === userId)?.user;
 
-  const seedFor = (userId: string) =>
-    members.find((row) => row.user.id === userId)?.user.avatarSeed ?? userId;
+  const nameFor = (userId: string) => find(userId)?.displayName ?? "someone";
+  const seedFor = (userId: string) => find(userId)?.avatarSeed ?? userId;
+  const modelFor = (userId: string) => find(userId)?.model ?? null;
 
-  const modelFor = (userId: string) =>
-    members.find((row) => row.user.id === userId)?.user.model ?? null;
+  // An agent has one face across the product, and the face is decided by what
+  // it runs on — so a run card must carry the provider the same as a message.
+  const providerFor = (userId: string) => find(userId)?.provider ?? null;
+
+  /** A run started from a share link has a name on it and no account behind it. */
+  const askerFor = (run: AgentRun) =>
+    run.invokedBy ? nameFor(run.invokedBy) : (run.invokedByName ?? "a guest");
 
   const waitingOn =
     connections.data?.connections.find(
@@ -106,6 +126,7 @@ export function DocChat({ documentId }: { documentId: string }) {
       avatarSeed: message.author.avatarSeed,
       kind: message.author.isGuest ? "guest" : message.author.kind,
       model: message.author.model,
+      provider: message.author.provider,
     },
     reactions: reactions[message.id],
   }));
@@ -129,6 +150,7 @@ export function DocChat({ documentId }: { documentId: string }) {
           displayName: nameFor(run.agentId),
           avatarSeed: seedFor(run.agentId),
           kind: "bot",
+          provider: providerFor(run.agentId),
         },
         run: {
           id: run.id,
@@ -142,8 +164,11 @@ export function DocChat({ documentId }: { documentId: string }) {
           agentName: nameFor(run.agentId),
           avatarSeed: seedFor(run.agentId),
           model: modelFor(run.agentId),
-          invokedBy: nameFor(run.invokedBy),
-          isYours: run.invokedBy === viewerId,
+          provider: providerFor(run.agentId),
+          invokedBy: askerFor(run),
+          isYours:
+            viewerId !== null &&
+            (run.invokedBy === viewerId || run.invokedByVisitorId === viewerId),
           waitingOn,
           startedAt: run.createdAt,
           summary: run.summary,
@@ -210,7 +235,13 @@ export function DocChat({ documentId }: { documentId: string }) {
       mentionables={level === "write" ? mentionables : []}
       onSend={(body) => send.mutate(body)}
       onToggleReaction={level === "write" ? toggleReaction : undefined}
-      onStopRun={level === "write" ? (runId) => cancel.mutate(runId) : undefined}
+      // Stopping a run is a member's call — the server refuses it from a link
+      // session, so the button should not be there to press.
+      onStopRun={
+        level === "write" && !isGuest
+          ? (runId) => cancel.mutate(runId)
+          : undefined
+      }
       stoppingRun={cancel.isPending}
     />
   );

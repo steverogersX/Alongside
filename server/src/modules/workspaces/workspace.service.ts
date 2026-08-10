@@ -5,6 +5,7 @@ import {
   forgetAccess,
 } from "@/modules/access/access.service.ts";
 import { toPublicUser } from "@/modules/auth/auth.mapper.ts";
+import { closeDocument } from "@/modules/collab/collab.events.ts";
 import { workspaceRepository } from "@/modules/workspaces/workspace.repository.ts";
 import type {
   AddMemberInput,
@@ -64,6 +65,25 @@ export const workspaceService = {
       })),
       documents,
     };
+  },
+
+  /**
+   * Only a workspace admin can take a whole workspace — and every document in
+   * it — away. The rooms are closed before the rows go so nobody is left
+   * editing into a document that no longer exists.
+   */
+  async remove(user: User, workspaceId: string) {
+    await accessService.requireWorkspaceRole(user, workspaceId, "admin");
+
+    const documentIds = await workspaceRepository.listDocumentIds(workspaceId);
+
+    const workspace = await workspaceRepository.remove(workspaceId);
+    if (!workspace) throw notFound("Workspace not found");
+
+    for (const documentId of documentIds) closeDocument(documentId);
+    forgetAccess();
+
+    return workspace;
   },
 
   async agents(user: User, workspaceId: string) {

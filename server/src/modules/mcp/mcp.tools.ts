@@ -1,8 +1,10 @@
 import { z } from "zod";
 
 import { accessService } from "@/modules/access/access.service.ts";
+import { chatTurns } from "@/modules/chat/chat.history.ts";
 import { chatRepository } from "@/modules/chat/chat.repository.ts";
 import { collabDocument } from "@/modules/collab/collab.document.ts";
+import { notify } from "@/modules/collab/collab.events.ts";
 import { documentRepository } from "@/modules/documents/document.repository.ts";
 import { inScope, type McpIdentity } from "@/modules/mcp/mcp.auth.ts";
 import { runRepository } from "@/modules/runs/run.repository.ts";
@@ -22,6 +24,12 @@ export class ToolError extends Error {
 const listDocuments = z.object({ workspaceId: uuidSchema.optional() });
 const listMentions = z.object({ limit: z.number().int().min(1).max(50).default(10) });
 const readDocument = z.object({ documentId: uuidSchema });
+const readChat = z.object({
+  documentId: uuidSchema,
+  runId: uuidSchema.optional(),
+  turns: z.number().int().min(1).max(25).default(3),
+  before: z.number().int().min(0).max(500).default(0),
+});
 const replaceText = z.object({
   documentId: uuidSchema,
   runId: uuidSchema.optional(),
@@ -33,6 +41,11 @@ const insertAfter = z.object({
   runId: uuidSchema.optional(),
   anchor: z.string().min(3).max(4000),
   text: z.string().min(1).max(8000),
+});
+const setTitle = z.object({
+  documentId: uuidSchema,
+  runId: uuidSchema.optional(),
+  title: z.string().trim().min(1).max(200),
 });
 const postMessage = z.object({
   documentId: uuidSchema,
@@ -161,6 +174,7 @@ export const tools = [
     async run(identity: McpIdentity, input: z.infer<typeof listMentions>) {
       const rows = await runRepository.queuedForUser(
         identity.user.id,
+        identity.agent.id,
         input.limit
       );
 
@@ -191,6 +205,21 @@ export const tools = [
         live: live.length > 0,
         content: live.length > 0 ? live : storedText(document.content),
       };
+    },
+  },
+  {
+    name: "read_chat",
+    description:
+      "Read one document's chat, newest first, grouped into turns — a turn is one person's uninterrupted stretch of messages. Defaults to the last 3. If that does not reach far enough back, raise turns or page back with before. Use it when a request leans on something said earlier.",
+    schema: readChat,
+    async run(identity: McpIdentity, input: z.infer<typeof readChat>) {
+      await reach(identity, input.documentId);
+
+      return chatTurns(input.documentId, {
+        turns: input.turns,
+        before: input.before,
+        excludeRunId: input.runId,
+      });
     },
   },
   {
@@ -250,6 +279,29 @@ export const tools = [
       }
 
       return result;
+    },
+  },
+  {
+    name: "set_title",
+    description:
+      "Rename a document. Only when the request asks for it — a title someone chose is not yours to tidy up in passing.",
+    schema: setTitle,
+    async run(identity: McpIdentity, input: z.infer<typeof setTitle>) {
+      const { role } = await reach(identity, input.documentId);
+      requireEditor(role);
+
+      const run = await activeRun(input.runId);
+      if (run) await runRepository.claim(run.id, identity.connection.id);
+
+      const document = await documentRepository.update(input.documentId, {
+        title: input.title,
+      });
+
+      // The title is not part of the shared Yjs text, so open readers only
+      // learn about a rename if we tell them.
+      notify(input.documentId, "document");
+
+      return { title: document.title };
     },
   },
   {

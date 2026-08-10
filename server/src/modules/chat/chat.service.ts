@@ -95,17 +95,75 @@ export const chatService = {
     }
 
     const link = req.link!;
-    const message = await chatRepository.create({
-      documentId,
-      body: input.body,
-      authorLinkId: link.linkId,
-      authorVisitorId: link.visitorId,
-      authorName: link.guestName,
+    const agent = await this.resolveGuestMention(link, documentId, input.body);
+
+    const { message, run } = await db.transaction(async (tx) => {
+      const message = await chatRepository.create(
+        {
+          documentId,
+          body: input.body,
+          authorLinkId: link.linkId,
+          authorVisitorId: link.visitorId,
+          authorName: link.guestName,
+        },
+        tx
+      );
+
+      if (!agent) return { message, run: null };
+
+      const run = await runRepository.create(tx, {
+        documentId,
+        agentId: agent.user.id,
+        invokedByLinkId: link.linkId,
+        invokedByVisitorId: link.visitorId,
+        invokedByName: link.guestName,
+        prompt: stripMention(input.body, agent.name),
+        ceiling: agent.ceiling,
+        status: "queued",
+        triggerMessageId: message.id,
+      });
+
+      return { message, run };
     });
 
     notify(documentId, "chat");
+    if (run) notify(documentId, "runs");
 
-    return { ...present({ message, author: null }), run: null };
+    return { ...present({ message, author: null }), run };
+  },
+
+  /**
+   * A guest may only spend the workspace's key if the link they hold was given
+   * chat write — reading along, or a link that can only be read, is not enough.
+   * What the agent may then do is capped by the link's own role.
+   */
+  async resolveGuestMention(
+    link: NonNullable<Request["link"]>,
+    documentId: string,
+    body: string
+  ) {
+    if (link.chatAccess !== "write") return null;
+
+    const names = findMentions(body);
+    if (names.length === 0) return null;
+
+    const agents = await accessService.agentsForDocument(documentId);
+
+    for (const name of names) {
+      const agent = agents.find((row) => firstName(row.displayName) === name);
+      if (!agent) continue;
+
+      const ceiling = await accessService.resolveLinkCeiling(
+        agent,
+        documentId,
+        link.role
+      );
+      if (!ceiling) continue;
+
+      return { user: agent, name, ceiling };
+    }
+
+    return null;
   },
 
   /**
