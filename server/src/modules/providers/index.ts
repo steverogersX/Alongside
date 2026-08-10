@@ -11,6 +11,7 @@ export const PROVIDERS = [
   "deepseek",
   "minimax",
   "mistral",
+  "openrouter",
   "other",
 ] as const;
 
@@ -21,6 +22,7 @@ const DEFAULT_BASE_URL: Partial<Record<Provider, string>> = {
   deepseek: "https://api.deepseek.com/v1",
   minimax: "https://api.minimax.chat/v1",
   mistral: "https://api.mistral.ai/v1",
+  openrouter: "https://openrouter.ai/api/v1",
 };
 
 // Everything except Anthropic and Gemini speaks the OpenAI wire format, so one

@@ -8,6 +8,7 @@ import {
   siKimi,
   siMinimax,
   siMistralai,
+  siOpenrouter,
 } from "simple-icons";
 
 import { cn } from "@/lib/utils";
@@ -20,6 +21,7 @@ export type ProviderId =
   | "deepseek"
   | "minimax"
   | "mistral"
+  | "openrouter"
   | "other";
 
 export const PROVIDERS: {
@@ -81,6 +83,19 @@ export const PROVIDERS: {
     baseUrl: "https://api.mistral.ai/v1",
   },
   {
+    id: "openrouter",
+    name: "OpenRouter",
+    // A gateway rather than a vendor: the model is namespaced by who made it,
+    // and these three are a starting point out of several hundred.
+    models: [
+      "anthropic/claude-sonnet-5",
+      "openai/gpt-5",
+      "google/gemini-2.5-pro",
+    ],
+    keyHint: "sk-or-v1-…",
+    baseUrl: "https://openrouter.ai/api/v1",
+  },
+  {
     id: "other",
     name: "Other",
     models: ["llama-3.3-70b", "qwen-max"],
@@ -109,11 +124,21 @@ const BRAND: Partial<
     hex: siMistralai.hex,
     title: "Mistral AI",
   },
+  openrouter: {
+    path: siOpenrouter.path,
+    hex: siOpenrouter.hex,
+    title: "OpenRouter",
+  },
 };
 
 // Brands whose black mark disappears on a dark surface follow the text colour
-// instead of their hex.
-const MONOCHROME = new Set<ProviderId>(["anthropic", "moonshot"]);
+// instead of their hex. OpenRouter's own slate reads as washed out beside the
+// saturated marks around it, so it takes the same treatment.
+const MONOCHROME = new Set<ProviderId>([
+  "anthropic",
+  "moonshot",
+  "openrouter",
+]);
 
 export function ProviderMark({
   provider,
