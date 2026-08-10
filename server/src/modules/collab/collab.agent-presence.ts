@@ -25,7 +25,7 @@ async function documentFor(documentId: string) {
  * Runs are serialised per document, so one slot on the server is enough.
  */
 export const agentPresence = {
-  async join(documentId: string, agent: User, invoker: User) {
+  async join(documentId: string, agent: User, invokedByName: string) {
     const document = await documentFor(documentId);
     if (!document) return;
 
@@ -39,7 +39,7 @@ export const agentPresence = {
         color: AGENT_COLOR,
         avatarSeed: agent.avatarSeed,
         kind: "agent",
-        forName: invoker.displayName,
+        forName: invokedByName,
         provider: agent.provider,
       },
     });
