@@ -77,8 +77,6 @@ export function DocChat({ documentId }: { documentId: string }) {
       }))
     : (workspace.data?.members ?? []);
 
-  const members = workspace.data?.members ?? [];
-
   const mentionables: Mentionable[] = roster
     .map((row) => ({
       id: row.user.id,
