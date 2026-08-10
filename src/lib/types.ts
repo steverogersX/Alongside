@@ -89,11 +89,6 @@ export type DocumentLink = {
   createdAt: string;
 };
 
-export type LinkSession = {
-  documentId: string;
-  role: Role;
-};
-
 export type Connection = {
   id: string;
   label: string;

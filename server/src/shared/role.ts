@@ -2,8 +2,6 @@ import type { Role } from "@/db/types.ts";
 
 const RANK: Record<Role, number> = { viewer: 1, editor: 2, admin: 3 };
 
-export const rank = (role: Role) => RANK[role];
-
 export const atLeast = (role: Role, required: Role) =>
   RANK[role] >= RANK[required];
 

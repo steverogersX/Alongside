@@ -4,22 +4,18 @@ import type {
   chatMessages,
   documentLinks,
   documents,
-  grants,
   orgs,
   chatAccess,
   roleName,
   runStatus,
-  sessions,
   users,
   workspaces,
 } from "@/db/schema/index.ts";
 
 export type Org = typeof orgs.$inferSelect;
 export type User = typeof users.$inferSelect;
-export type Session = typeof sessions.$inferSelect;
 export type Workspace = typeof workspaces.$inferSelect;
 export type Document = typeof documents.$inferSelect;
-export type Grant = typeof grants.$inferSelect;
 export type DocumentLink = typeof documentLinks.$inferSelect;
 export type AgentRun = typeof agentRuns.$inferSelect;
 export type AgentConnection = typeof agentConnections.$inferSelect;

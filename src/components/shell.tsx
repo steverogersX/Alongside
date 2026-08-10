@@ -159,14 +159,6 @@ function Surface({ children }: { children: ReactNode }) {
   );
 }
 
-export function ShellHeader({ children }: { children: ReactNode }) {
-  return (
-    <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-3 border-b border-border/70 bg-card/90 px-5 backdrop-blur-md">
-      {children}
-    </header>
-  );
-}
-
 export function ShellRail({
   children,
   className,

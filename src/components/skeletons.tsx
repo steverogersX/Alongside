@@ -148,23 +148,3 @@ export function PeopleSkeleton({ rows = 4 }: { rows?: number }) {
   );
 }
 
-export function BrandPulse({ label }: { label: string }) {
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="flex h-svh flex-col items-center justify-center gap-3"
-    >
-      <div className="flex items-center gap-1.5">
-        {[0, 1, 2].map((index) => (
-          <span
-            key={index}
-            className="animate-agent-pulse size-1.5 rounded-full bg-agent"
-            style={{ animationDelay: `${index * 180}ms` }}
-          />
-        ))}
-      </div>
-      <span className="sr-only">{label}</span>
-    </div>
-  );
-}

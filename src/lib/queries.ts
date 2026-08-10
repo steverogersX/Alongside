@@ -15,7 +15,6 @@ import type {
   Connection,
   DocumentLink,
   DocumentSummary,
-  LinkSession,
   Member,
   RecentDocument,
   Role,
@@ -119,14 +118,6 @@ export function useRecentDocuments(limit = 6) {
   });
 }
 
-export function useOrgAgents() {
-  return useQuery({
-    queryKey: keys.agents,
-    queryFn: () => api<{ agents: Member[] }>("/agents"),
-    staleTime: 60_000,
-  });
-}
-
 export function useCreateWorkspace() {
   const client = useQueryClient();
 
@@ -168,30 +159,6 @@ export function useConnections(poll = false) {
     queryFn: () => api<{ connections: Connection[] }>("/connections"),
     staleTime: 30_000,
     refetchInterval: poll ? 2000 : false,
-  });
-}
-
-export function useCreateConnection() {
-  const client = useQueryClient();
-
-  return useMutation({
-    mutationFn: (input: { label: string; agentId: string }) =>
-      apiPost<{ connection: Connection; token: string; command: string }>(
-        "/connections",
-        input
-      ),
-    onSuccess: () =>
-      client.invalidateQueries({ queryKey: keys.connections }),
-  });
-}
-
-export function useRevokeConnection() {
-  const client = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => apiDelete(`/connections/${id}`),
-    onSuccess: () =>
-      client.invalidateQueries({ queryKey: keys.connections }),
   });
 }
 
@@ -238,31 +205,6 @@ export function useCancelRun(documentId: string) {
   });
 }
 
-export function useSaveDocument(documentId: string) {
-  const client = useQueryClient();
-
-  return useMutation({
-    mutationFn: (patch: {
-      title?: string;
-      status?: DocumentSummary["status"];
-      content?: unknown;
-    }) =>
-      api<{ document: DocumentSummary }>(`/documents/${documentId}`, {
-        method: "PATCH",
-        body: JSON.stringify(patch),
-      }),
-    onSuccess: (data) =>
-      client.setQueryData(
-        keys.document(documentId),
-        (
-          previous:
-            | { document: DocumentSummary; role: Role; via: "member" | "link" }
-            | undefined
-        ) => (previous ? { ...previous, document: data.document } : previous)
-      ),
-  });
-}
-
 export function useSendMessage(documentId: string) {
   const client = useQueryClient();
 
@@ -279,34 +221,12 @@ export function useSendMessage(documentId: string) {
   });
 }
 
-export function useStartRun(documentId: string) {
-  const client = useQueryClient();
-
-  return useMutation({
-    mutationFn: (input: { agentId: string; prompt: string }) =>
-      apiPost<{ run: AgentRun }>(`/documents/${documentId}/runs`, input),
-    onSuccess: () => {
-      void client.invalidateQueries({ queryKey: keys.runs(documentId) });
-      void client.invalidateQueries({ queryKey: keys.chat(documentId) });
-    },
-  });
-}
-
 export function useLogout() {
   const client = useQueryClient();
 
   return useMutation({
     mutationFn: () => apiPost("/auth/logout", {}),
     onSuccess: () => client.clear(),
-  });
-}
-
-export function useLinkSession() {
-  return useQuery({
-    queryKey: keys.linkSession,
-    queryFn: () => api<LinkSession>("/links/session"),
-    retry: false,
-    staleTime: 5 * 60_000,
   });
 }
 
